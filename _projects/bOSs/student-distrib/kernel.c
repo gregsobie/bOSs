@@ -7,7 +7,7 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
-
+#include "traps.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -158,15 +158,11 @@ entry (unsigned long magic, unsigned long addr)
 	 * IDT correctly otherwise QEMU will triple fault and simple close
 	 * without showing you any output */
 	//printf("Enabling Interrupts\n");
-	//sti();
+	sti();
 
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
-}
-
-void fill_interrupts(){
-
 }
 
