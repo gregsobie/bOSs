@@ -25,14 +25,13 @@ _start:
 
 continue:
 	# Load the GDT
-
+	lgdt gdt_desc
 	# Load CS with the new descriptor value
 	ljmp    $KERNEL_CS, $keep_going
-
 keep_going:
+
 	# Set up ESP so we can have an initial stack
 	movl    $0x800000, %esp
-
 	# Set up the rest of the segment selector registers
 	movw    $KERNEL_DS, %cx
 	movw    %cx, %ss
@@ -40,13 +39,11 @@ keep_going:
 	movw    %cx, %es
 	movw    %cx, %fs
 	movw    %cx, %gs
-
 	# Push the parameters that entry() expects (see kernel.c):
 	# eax = multiboot magic
 	# ebx = address of multiboot info struct
 	pushl   %ebx
 	pushl   %eax
-
 	# Jump to the C entrypoint to the kernel.
 	call    entry
 
