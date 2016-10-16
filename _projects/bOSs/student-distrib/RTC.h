@@ -13,7 +13,8 @@
 #define CMOS		0x71
 
 #define MASKBIT6	0x40
-#define IRQ_NUM		8		
+#define IRQ_NUM		8
+#define RTC_DEFAULT_RATE	0x0F		
 
 // Define RTC functions
 extern void RTC_init();
