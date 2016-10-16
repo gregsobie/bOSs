@@ -30,7 +30,7 @@ void RTC_init()
 	// Set index
 	outb(REGISTER_A, NMI);
 	// Write rate into Register A (bottom 4 bits)
-	outb((val & 0xF0) | rate, CMOS);
+	outb((val & RATEMASK) | rate, CMOS);
 
 	// Enable interrupts
 	sti();
