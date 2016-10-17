@@ -73,8 +73,9 @@ send_eoi(uint32_t irq_num)
 {
 	if(irq_num >= 8){
 		//Send EOI to slave and master
-		outb(EOI |  (irq_num-8),SLAVE_8259_COMMAND);
 		outb(EOI |  (0x02),MASTER_8259_COMMAND);
+		outb(EOI |  (irq_num-8),SLAVE_8259_COMMAND);
+
 	}else{
 		//Send EOI to master
 		outb(EOI |  (irq_num),MASTER_8259_COMMAND);
