@@ -17,5 +17,7 @@ uint32_t video_page_table[1024] __attribute__((aligned(4096)));
 #define FLAG_ACCESSED      0x20
 #define FLAG_4MB_PAGE      0x80
 #define FLAG_GLOBAL        0x100
+#define TABLE_SIZE         1024
+#define DIRECTORY_SIZE     1024
 
 #endif

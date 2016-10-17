@@ -15,8 +15,8 @@ void
 i8259_init(void)
 {
 	//Start with all interrupts disabled  (except signal from slave)
-	master_mask = 0xff;
-	slave_mask = 0xff;
+	master_mask = BASE_MASK;
+	slave_mask = BASE_MASK;
 	
 
 	outb(master_mask,MASTER_8259_DATA);
@@ -40,13 +40,13 @@ i8259_init(void)
 void
 enable_irq(uint32_t irq_num)
 {
-	if(irq_num < 8){
+	if(irq_num < PIC_SIZE){
 		//Update mask, then send mask to master
 		master_mask &= ~(1 << irq_num);
 		outb(master_mask,MASTER_8259_DATA);
 	}else{
 		//Update mask, then send mask to slave
-		slave_mask &= ~(1 << (irq_num-8));
+		slave_mask &= ~(1 << (irq_num-PIC_SIZE));
 		outb(slave_mask,SLAVE_8259_DATA);
 
 	}
@@ -56,13 +56,13 @@ enable_irq(uint32_t irq_num)
 void
 disable_irq(uint32_t irq_num)
 {
-	if(irq_num < 8){
+	if(irq_num < PIC_SIZE){
 		//Update mask, then send mask to master	
 		master_mask |= (1 << irq_num);
 		outb(master_mask,MASTER_8259_DATA);
 	}else{
 		//Update mask, then send mask to slave
-		slave_mask |= (1 << (irq_num-8));
+		slave_mask |= (1 << (irq_num-PIC_SIZE));
 		outb(slave_mask,SLAVE_8259_DATA);
 	}
 }
@@ -71,10 +71,10 @@ disable_irq(uint32_t irq_num)
 void
 send_eoi(uint32_t irq_num)
 {
-	if(irq_num >= 8){
+	if(irq_num >= PIC_SIZE){
 		//Send EOI to slave and master
-		outb(EOI |  (0x02),MASTER_8259_COMMAND);
-		outb(EOI |  (irq_num-8),SLAVE_8259_COMMAND);
+		outb(EOI |  (SLAVE_IRQ),MASTER_8259_COMMAND);
+		outb(EOI |  (irq_num-PIC_SIZE),SLAVE_8259_COMMAND);
 
 	}else{
 		//Send EOI to master
