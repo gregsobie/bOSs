@@ -5,8 +5,40 @@
 #include "keyboard.h"
 #include "lib.h"
 #include "x86_desc.h"
+#include "i8259.h"
 
 bool numlock, scrolllock, capslock, shift, alt, ctrl;
+
+/* Character data corresponding to make codes */
+uint8_t keyboard_chars[128] = {
+	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
+	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a', 's',	
+	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0,'\\', 'z', 'x', 'c', 'v', 
+	 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
+	    0,	/* 59 - F1 key ... > */
+	    0,   0,   0,   0,   0,   0,   0,   0,
+	    0,	/* < ... F10 */
+	    0,	/* 69 - Num lock*/
+	    0,	/* Scroll Lock */
+	    0,	/* Home key */
+	    0,	/* Up Arrow */
+	    0,	/* Page Up */
+	  '-',
+	    0,	/* Left Arrow */
+	    0,
+	    0,	/* Right Arrow */
+	  '+',
+	    0,	/* 79 - End key*/
+	    0,	/* Down Arrow */
+	    0,	/* Page Down */
+	    0,	/* Insert Key */
+	    0,	/* Delete Key */
+	    0,   0,   0,
+	    0,	/* F11 Key */
+	    0,	/* F12 Key */
+	    0,	/* All other keys are undefined */
+	};
+
 
 /* Prepares driver for use */
  void keyboard_install (int irq){
@@ -36,7 +68,7 @@ bool numlock, scrolllock, capslock, shift, alt, ctrl;
  	outb(cmd, KEYBOARD_CTRL_CMD_REG);
  }
 
-  /* Read keyboard encoder buffer */
+  /* Read keyboard encoder input buffer */
  uint8_t keyboard_encoder_read_buf (){
  	return inb(KEYBOARD_ENCODER_IN_BUF);
  }
@@ -62,7 +94,7 @@ bool numlock, scrolllock, capslock, shift, alt, ctrl;
  	uint8_t data = 0;
 
  	/* Set or clear LEDs */
- 	data |= (capslock&4) | (numlock&2) | (scrolllock&1);
+ 	data |= ((capslock<<2)&4) | ((numlock<<1)&2) | (scrolllock&1);
 
  	/* Send the command -- update keyboard LEDS */
  	keyboard_encoder_send_cmd (KEYBOARD_ENCODER_CMD_SET_LED);
@@ -74,4 +106,24 @@ bool numlock, scrolllock, capslock, shift, alt, ctrl;
  void key_irq_handler(){
  	/* Check scan codes */
  	//keyboard_ctrl_read_status
+
+ 	/* Mask interrupts */
+ 	cli();
+
+ 	/* Byte received from keyboard */
+ 	uint8_t keyboard_scancode;
+ 	uint8_t keyboard_character;
+
+ 	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
+ 	keyboard_scancode = inb(KEYBOARD_ENCODER_CMD_REG) & 0x7F;
+
+ 	/* Prints pressed character to display */
+ 	keyboard_character = keyboard_chars[keyboard_scancode];
+ 	printf("%c", keyboard_character);
+
+ 	/* Send End-of-Interrupt */
+ 	send_eoi(KEYBOARD_IRQ);
+
+ 	/* Unmask interrupt */
+ 	sti();
  }
