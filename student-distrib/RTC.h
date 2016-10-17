@@ -7,7 +7,7 @@
 // Define MACROS
 #define REGISTER_A	0x8A
 #define REGISTER_B 	0x8B
-#define REGISTER_C	0x8C
+#define REGISTER_C	0x0C
 
 #define NMI			0x70
 #define CMOS		0x71
