@@ -96,6 +96,16 @@ idt[44] = mouse
 		
 			
 	}
+
+
+	/*
+
+	set idt entries 
+	first 32 = exceptions
+	next (256-32) = interrupts
+	last 12 = system calls(commented out)
+
+	*/
 	SET_IDT_ENTRY(idt[0],&de_handler);
 	SET_IDT_ENTRY(idt[1],&db_handler);
 	SET_IDT_ENTRY(idt[2],&nmi_handler);

@@ -10,61 +10,22 @@
 bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl;
 
 /* Character data corresponding to make codes */
+/* Zero denotes an unprintable character */
 uint8_t keyboard_chars[128] = {
 	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
 	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a', 's',	
 	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0,'\\', 'z', 'x', 'c', 'v', 
 	 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
-	    0,	/* 59 - F1 key ... > */
-	    0,   0,   0,   0,   0,   0,   0,   0,
-	    0,	/* < ... F10 */
-	    0,	/* 69 - Num lock*/
-	    0,	/* Scroll Lock */
-	    0,	/* Home key */
-	    0,	/* Up Arrow */
-	    0,	/* Page Up */
-	  '-',
-	    0,	/* Left Arrow */
-	    0,
-	    0,	/* Right Arrow */
-	  '+',
-	    0,	/* 79 - End key*/
-	    0,	/* Down Arrow */
-	    0,	/* Page Down */
-	    0,	/* Insert Key */
-	    0,	/* Delete Key */
-	    0,   0,   0,
-	    0,	/* F11 Key */
-	    0,	/* F12 Key */
-	    0,	/* All other keys are undefined */
+	    0,	0,   0,   0,   0,   0,   0,   0,   0, 0, 0,	0, 0, 0, 0,	/* Page Up */
+	  	'-', 0,	0, 0, '+', 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	/* Remaining keys undefined */
 	};
+/* Capital letters */
 uint8_t shift_keyboard_chars[128] = {
 	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
 	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 'A', 'S',	
 	 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0,'|', 'Z', 'X', 'C', 'V', 
-	 	'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ',	 0,
-	    0,	/* 59 - F1 key ... > */
-	    0,   0,   0,   0,   0,   0,   0,   0,
-	    0,	/* < ... F10 */
-	    0,	/* 69 - Num lock*/
-	    0,	/* Scroll Lock */
-	    0,	/* Home key */
-	    0,	/* Up Arrow */
-	    0,	/* Page Up */
-	  '-',
-	    0,	/* Left Arrow */
-	    0,
-	    0,	/* Right Arrow */
-	  '+',
-	    0,	/* 79 - End key*/
-	    0,	/* Down Arrow */
-	    0,	/* Page Down */
-	    0,	/* Insert Key */
-	    0,	/* Delete Key */
-	    0,   0,   0,
-	    0,	/* F11 Key */
-	    0,	/* F12 Key */
-	    0,	/* All other keys are undefined */
+	 	'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
+	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
 	};
 
 /* Prepares driver for use */
