@@ -29,6 +29,14 @@
 /* Keyboard encoder commands */
 #define KEYBOARD_ENCODER_CMD_SET_LED 		 0xED
 
+/*Make codes of modifier keys*/
+#define KEYBOARD_LEFT_SHIFT  0x2a
+#define KEYBOARD_RIGHT_SHIFT 0x36
+#define KEYBOARD_CAPS_LOCK   0x3a
+#define KEYBOARD_ALT         0x38
+#define KEYBOARD_NUM_LOCK    0x45
+#define KEYBOARD_SCROLL_LOCK 0x46
+
 /* Stores the current state of certain keys */
 extern bool numlock, scrolllock, capslock, shift, alt, ctrl;
 extern uint8_t _lastScanCode;
