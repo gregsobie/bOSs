@@ -6,6 +6,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "multiboot.h"
+#include "idt_functions.h"
 
 
 void initialize_idt()
@@ -118,8 +119,8 @@ idt[44] = mouse
 	SET_IDT_ENTRY(idt[32],&pit_irq_handler);
 	SET_IDT_ENTRY(idt[33],&key_irq_handler);
 	SET_IDT_ENTRY(idt[40],&rtc_irq_handler);
-	SET_IDT_ENTRY(idt[44],&mouse_irq_handler);
-	SET_IDT_ENTRY(idt[45],&pic_handler);
+	//SET_IDT_ENTRY(idt[44],&mouse_irq_handler);
+	//SET_IDT_ENTRY(idt[45],&pic);
 
 
 	
@@ -326,36 +327,15 @@ void xf_handler()
 }
 void pit_irq_handler()
 {
-	cli();
-	printf("pit irq handler ");
+	//cli();
+	//printf("pit irq handler ");
 	// while(1)
 	//   {
 
 	//   }
 	send_eoi(0);
-	printf("sent pit irq eoi");
-	sti();
-	printf("restored interrupts");
-}
-
-
-void mouse_irq_handler()
-{
-		cli();
-	printf("fake mouse");
-		while(1)
-	 {
-
-	 }
-	sti();
-}
-void pic_handler()
-{
-	cli();
-	printf("this is the pic_handler");
-		while(1)
-	 {
-
-	 }
-	sti();
+	//printf("sent pit irq eoi");
+	//sti();
+	//printf("restored interrupts");
+ 	asm volatile("leave;iret;");
 }

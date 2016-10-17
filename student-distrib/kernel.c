@@ -153,8 +153,10 @@ entry (unsigned long magic, unsigned long addr)
 	initialize_idt();
 	lidt(idt_desc_ptr);
 	i8259_init();
-	//enable_irq(0);
-	RTC_init();
+	//enable_irq(2);
+	enable_irq(0);
+
+	//RTC_init();
 	keyboard_install(1);
 	
 
