@@ -17,6 +17,9 @@ i8259_init(void)
 	//Start with all interrupts disabled  (except signal from slave)
 	master_mask = 0x02;
 	slave_mask = 0x00;
+	
+	outb(master_mask,MASTER_8259_DATA);
+	outb(slave_mask,SLAVE_8259_DATA);
 
 	outb(ICW1,MASTER_8259_COMMAND); //Set to single cascade mode
 	outb(ICW2_MASTER,MASTER_8259_DATA); //Pass interrupt vector
@@ -28,8 +31,7 @@ i8259_init(void)
 	outb(ICW3_SLAVE,SLAVE_8259_DATA); //Inform slave of its position
 	outb(ICW4,SLAVE_8259_DATA); //8086 mode, normal EOI, not buffered, not fully nested
 
-	outb(master_mask,MASTER_8259_DATA);
-	outb(slave_mask,SLAVE_8259_DATA);
+
 
 }
 

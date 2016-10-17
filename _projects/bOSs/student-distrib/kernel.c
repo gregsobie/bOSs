@@ -158,7 +158,10 @@ entry (unsigned long magic, unsigned long addr)
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 	
-
+	init_kernel_pd();
+	loadPageDirectory(kernel_page_directory);
+	enablePaging();
+	//*((char *)0xB8000) = 'X';
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
 	 * IDT correctly otherwise QEMU will triple fault and simple close
