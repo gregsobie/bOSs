@@ -14,17 +14,19 @@ uint8_t slave_mask; /* IRQs 8-15 */
 void
 i8259_init(void)
 {
-	master_mask = 0x00;
+	//Start with all interrupts disabled  (except signal from slave)
+	master_mask = 0x02;
 	slave_mask = 0x00;
-	outb(ICW1,MASTER_8259_COMMAND);
-	outb(ICW2_MASTER,MASTER_8259_DATA);
-	outb(ICW3_MASTER,MASTER_8259_DATA);
-	outb(ICW4,MASTER_8259_DATA);
 
-	outb(ICW1,SLAVE_8259_COMMAND);
-	outb(ICW2_SLAVE,SLAVE_8259_DATA);
-	outb(ICW3_SLAVE,SLAVE_8259_DATA);
-	outb(ICW4,SLAVE_8259_DATA);
+	outb(ICW1,MASTER_8259_COMMAND); //Set to single cascade mode
+	outb(ICW2_MASTER,MASTER_8259_DATA); //Pass interrupt vector
+	outb(ICW3_MASTER,MASTER_8259_DATA); //Inform master of slave position
+	outb(ICW4,MASTER_8259_DATA); //8086 mode, normal EOI, not buffered, not fully nested
+
+	outb(ICW1,SLAVE_8259_COMMAND); //Set to single cascade mode
+	outb(ICW2_SLAVE,SLAVE_8259_DATA); //Pass interrupt vector
+	outb(ICW3_SLAVE,SLAVE_8259_DATA); //Inform slave of its position
+	outb(ICW4,SLAVE_8259_DATA); //8086 mode, normal EOI, not buffered, not fully nested
 
 	outb(master_mask,MASTER_8259_DATA);
 	outb(slave_mask,SLAVE_8259_DATA);
@@ -36,9 +38,11 @@ void
 enable_irq(uint32_t irq_num)
 {
 	if(irq_num < 8){
+		//Update mask, then send mask to master
 		master_mask |= (1 << irq_num);
 		outb(MASTER_8259_DATA,master_mask);
 	}else{
+		//Update mask, then send mask to slave
 		slave_mask |= (1 << (irq_num-8));
 		outb(SLAVE_8259_DATA,slave_mask);
 	}
@@ -49,9 +53,11 @@ void
 disable_irq(uint32_t irq_num)
 {
 	if(irq_num < 8){
+		//Update mask, then send mask to master	
 		master_mask &= ~(1 << irq_num);
 		outb(MASTER_8259_DATA,master_mask);
 	}else{
+		//Update mask, then send mask to slave
 		slave_mask &= ~(1 << (irq_num-8));
 		outb(SLAVE_8259_DATA,slave_mask);
 	}
@@ -62,9 +68,11 @@ void
 send_eoi(uint32_t irq_num)
 {
 	if(irq_num >= 8){
+		//Send EOI to slave and master
 		outb(SLAVE_8259_COMMAND,EOI |  (1 << (irq_num-8)));
 		outb(MASTER_8259_COMMAND,EOI |  (1 << ICW3_SLAVE));
 	}else{
+		//Send EOI to master
 		outb(MASTER_8259_COMMAND,EOI |  (1 << irq_num));
 
 	}
