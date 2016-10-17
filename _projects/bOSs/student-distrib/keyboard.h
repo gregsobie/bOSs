@@ -13,6 +13,9 @@
 #define KEYBOARD_CTRL_STATUS_REG 0x64
 #define KEYBOARD_CTRL_CMD_REG	 0x64
 
+/* IRQ Constant */
+#define KEYBOARD_IRQ 	1
+
 /* Bit masks for R/W to the status register */
 #define KEYBOARD_CTRL_STATUS_MASK_OUT_BUF	 0x1 	//0000 0001
 #define KEYBOARD_CTRL_STATUS_MASK_IN_BUF	 0x2 	//0000 0010
