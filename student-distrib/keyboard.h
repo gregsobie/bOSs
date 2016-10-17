@@ -42,7 +42,7 @@ extern bool numlock, scrolllock, capslock, shift, alt, ctrl;
 extern uint8_t _lastScanCode;
 
 /* Prepares driver for use */
-void keyboard_install(int irq);
+extern void keyboard_install(int irq);
 
 /* Read status from keyboard controller */
 uint8_t keyboard_ctrl_read_status ();

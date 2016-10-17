@@ -328,11 +328,14 @@ void pit_irq_handler()
 {
 	cli();
 	printf("pit irq handler ");
-		while(1)
-	 {
+	// while(1)
+	//   {
 
-	 }
+	//   }
+	send_eoi(0);
+	printf("sent pit irq eoi");
 	sti();
+	printf("restored interrupts");
 }
 
 

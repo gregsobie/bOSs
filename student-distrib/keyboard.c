@@ -71,10 +71,10 @@ uint8_t shift_keyboard_chars[128] = {
  void keyboard_install (int irq){
  	/* Installs interrupt handler */
  	//SET_IDT_ENTRY(idt[33], key_irq_handler);
-
  	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
  	keyboard_set_leds(numlock, scrolllock, capslock);
+	enable_irq(irq);
 
  	/* Set shift, ctrl, and alt keys */
  	left_shift = right_shift = alt = ctrl = false;
@@ -121,7 +121,7 @@ uint8_t shift_keyboard_chars[128] = {
  	uint8_t data = 0;
 
  	/* Set or clear LEDs */
- 	data |= ((capslock<<2)&4) | ((numlock<<1)&2) | (scrolllock&1);
+ 	data = ((capslock<<2)&4) | ((numlock<<1)&2) | (scrolllock&1);
 
  	/* Send the command -- update keyboard LEDS */
  	keyboard_encoder_send_cmd (KEYBOARD_ENCODER_CMD_SET_LED);
@@ -133,21 +133,20 @@ uint8_t shift_keyboard_chars[128] = {
  void key_irq_handler(){
  	/* Check scan codes */
  	//keyboard_ctrl_read_status
-
  	/* Mask interrupts */
  	cli();
-
+ 	printf("key_handler\n");
  	/* Byte received from keyboard */
  	uint8_t keyboard_scancode;
  	uint8_t keyboard_character;
  	uint8_t keyboard_data;
 
  	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
- 	keyboard_data = inb(KEYBOARD_ENCODER_CMD_REG) & 0x7F;
+ 	keyboard_data = inb(0x60);
  	keyboard_scancode = keyboard_data & 0x7F;
  	
  	/* MSB=1 denotes key press, MSB=0 denotes key released */
- 	if(keyboard_data & 0x80){
+ 	if(!(keyboard_data & 0x80)){
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
  			left_shift = true;
  		else if(keyboard_scancode == KEYBOARD_RIGHT_SHIFT)
@@ -181,9 +180,10 @@ uint8_t shift_keyboard_chars[128] = {
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = false;
 	}
+	//clear();
 	/* Prints pressed character to display */
- 	printf("%c", keyboard_character);
-
+ 	printf("%c %c\n", keyboard_scancode,keyboard_character);
+ 	*((char *)0xB8000) = keyboard_scancode;
  	/* Send End-of-Interrupt */
  	send_eoi(KEYBOARD_IRQ);
 

@@ -18,9 +18,10 @@ i8259_init(void)
 	master_mask = 0x02;
 	slave_mask = 0x00;
 	
-	outb(master_mask,MASTER_8259_DATA);
-	outb(slave_mask,SLAVE_8259_DATA);
 
+	outb(~master_mask,MASTER_8259_DATA);
+	outb(~slave_mask,SLAVE_8259_DATA);
+	
 	outb(ICW1,MASTER_8259_COMMAND); //Set to single cascade mode
 	outb(ICW2_MASTER,MASTER_8259_DATA); //Pass interrupt vector
 	outb(ICW3_MASTER,MASTER_8259_DATA); //Inform master of slave position
@@ -42,11 +43,12 @@ enable_irq(uint32_t irq_num)
 	if(irq_num < 8){
 		//Update mask, then send mask to master
 		master_mask |= (1 << irq_num);
-		outb(MASTER_8259_DATA,master_mask);
+		outb(~master_mask,MASTER_8259_DATA);
 	}else{
 		//Update mask, then send mask to slave
 		slave_mask |= (1 << (irq_num-8));
-		outb(SLAVE_8259_DATA,slave_mask);
+		outb(~slave_mask,SLAVE_8259_DATA);
+
 	}
 }
 
@@ -57,11 +59,11 @@ disable_irq(uint32_t irq_num)
 	if(irq_num < 8){
 		//Update mask, then send mask to master	
 		master_mask &= ~(1 << irq_num);
-		outb(MASTER_8259_DATA,master_mask);
+		outb(~master_mask,MASTER_8259_DATA);
 	}else{
 		//Update mask, then send mask to slave
 		slave_mask &= ~(1 << (irq_num-8));
-		outb(SLAVE_8259_DATA,slave_mask);
+		outb(~slave_mask,SLAVE_8259_DATA);
 	}
 }
 
@@ -71,11 +73,11 @@ send_eoi(uint32_t irq_num)
 {
 	if(irq_num >= 8){
 		//Send EOI to slave and master
-		outb(SLAVE_8259_COMMAND,EOI |  (1 << (irq_num-8)));
-		outb(MASTER_8259_COMMAND,EOI |  (1 << ICW3_SLAVE));
+		outb(EOI |  (1 << (irq_num-8)),SLAVE_8259_COMMAND);
+		outb(EOI |  (1 << ICW3_SLAVE),MASTER_8259_COMMAND);
 	}else{
 		//Send EOI to master
-		outb(MASTER_8259_COMMAND,EOI |  (1 << irq_num));
+		outb(EOI |  (1 << irq_num),MASTER_8259_COMMAND);
 
 	}
 }
