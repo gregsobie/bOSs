@@ -141,8 +141,8 @@ uint8_t shift_keyboard_chars[128] = {
  	uint8_t keyboard_data;
 
  	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
- 	keyboard_data = inb(0x60);
- 	keyboard_scancode = keyboard_data & 0x7F;
+ 	keyboard_data = inb(KEYBOARD_ENCODER_IN_BUF);
+ 	keyboard_scancode = keyboard_data & KEY_STATE_MASK;
  	
  	/* MSB=1 denotes key press, MSB=0 denotes key released */
  	if(!(keyboard_data & 0x80)){
@@ -151,7 +151,7 @@ uint8_t shift_keyboard_chars[128] = {
  		else if(keyboard_scancode == KEYBOARD_RIGHT_SHIFT)
  			right_shift = true;
  		else if(keyboard_scancode == KEYBOARD_CAPS_LOCK)
- 			capslock = true;
+ 			capslock = !capslock;
  		else if(keyboard_scancode == KEYBOARD_ALT)
  			alt = true;
  		else if(keyboard_scancode == KEYBOARD_NUM_LOCK)
@@ -170,8 +170,6 @@ uint8_t shift_keyboard_chars[128] = {
  			left_shift = false;
  		else if(keyboard_scancode == KEYBOARD_RIGHT_SHIFT)
  			right_shift = false; 		
- 		else if(keyboard_scancode == KEYBOARD_CAPS_LOCK)
- 			capslock = false;
  		else if(keyboard_scancode == KEYBOARD_ALT)
  			alt = false;
  		else if(keyboard_scancode == KEYBOARD_NUM_LOCK)

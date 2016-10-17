@@ -5,11 +5,11 @@
 
 void init_kernel_pd(){
 	int i;
-	for(i = 0; i < 1024; i++)
+	for(i = 0; i < DIRECTORY_SIZE; i++)
 	{
 	    kernel_page_directory[i] = FLAG_WRITE_ENABLE;
 	}
-	for(i = 0; i < 1024; i++)
+	for(i = 0; i < TABLE_SIZE; i++)
 	{
 	    video_page_table[i] = FLAG_WRITE_ENABLE;
 	}

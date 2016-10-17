@@ -46,7 +46,7 @@ void rtc_irq_handler()
 	inb(CMOS);
 	
 	//test_interrupts();
-	*((char *)0xB8001) = 50 ^ *((char *)0xB8001);
+	//*((char *)0xB8001) = 50 ^ *((char *)0xB8001);
 
 
 	// Send end-of-interrupt signal

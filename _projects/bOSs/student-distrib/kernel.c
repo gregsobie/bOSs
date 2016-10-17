@@ -166,7 +166,7 @@ entry (unsigned long magic, unsigned long addr)
 	init_kernel_pd();
 	loadPageDirectory(kernel_page_directory);
 	enablePaging();
-	//*((char *)0x000) = 'X';
+	//*((char *)0x005) = 'X';
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
 	 * IDT correctly otherwise QEMU will triple fault and simple close
