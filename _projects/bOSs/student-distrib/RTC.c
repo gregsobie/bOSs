@@ -32,24 +32,25 @@ void RTC_init()
 	// Write rate into Register A (bottom 4 bits)
 	outb((val & RATEMASK) | rate, CMOS);
 
-	enable_irq(8);
+	enable_irq(IRQ_NUM);
 	// Enable interrupts
 	//sti();
 }
 
 void rtc_irq_handler()
 {
-	// Disable interrupts
 
 	// Disable NMI and select Register C
 	outb(REGISTER_C, NMI);
 	// Throw away contents
 	inb(CMOS);
 	
-	test_interrupts();
+	//test_interrupts();
+	*((char *)0xB8001) = 50 ^ *((char *)0xB8001);
+
+
 	// Send end-of-interrupt signal
 	send_eoi(IRQ_NUM);
 
-	// Enable interrupts
  	asm volatile("leave;iret;");
 }
