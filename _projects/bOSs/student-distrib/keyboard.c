@@ -134,8 +134,7 @@ uint8_t shift_keyboard_chars[128] = {
  	/* Check scan codes */
  	//keyboard_ctrl_read_status
  	/* Mask interrupts */
- 	cli();
- 	printf("key_handler\n");
+ 	//printf("key_handler\n");
  	/* Byte received from keyboard */
  	uint8_t keyboard_scancode;
  	uint8_t keyboard_character;
@@ -182,11 +181,11 @@ uint8_t shift_keyboard_chars[128] = {
 	}
 	//clear();
 	/* Prints pressed character to display */
- 	printf("%c %c\n", keyboard_scancode,keyboard_character);
- 	*((char *)0xB8000) = keyboard_scancode;
+ 	//printf("%c %c\n", keyboard_scancode,keyboard_character);
+ 	*((char *)0xB8000) = keyboard_character;
  	/* Send End-of-Interrupt */
  	send_eoi(KEYBOARD_IRQ);
 
  	/* Unmask interrupt */
- 	sti();
+ 	asm volatile("leave;iret;");
  }

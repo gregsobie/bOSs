@@ -53,4 +53,5 @@ void rtc_irq_handler()
 
 	// Enable interrupts
 	sti();
+ 	asm volatile("leave;iret;");
 }

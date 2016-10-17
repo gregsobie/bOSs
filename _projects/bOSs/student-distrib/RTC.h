@@ -21,4 +21,4 @@
 extern void RTC_init();
 extern void rtc_irq_handler();
 
-#endif 
+#endif
