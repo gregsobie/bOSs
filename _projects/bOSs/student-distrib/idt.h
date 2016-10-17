@@ -4,8 +4,8 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "RTC.h"
-#include "idt_functions.h"
-#include "idt_functions.S"
+//#include "idt_functions.h"
+//#include "idt_functions.S"
 #include "i8259.h"
 #include "debug.h"
 #include "multiboot.h"
@@ -38,5 +38,6 @@ extern void xf_handler();
 extern void pit_irq_handler();
 //extern void key_irq_handler();
 extern void mouse_irq_handler();
+extern void pic_handler();
 
 #endif
