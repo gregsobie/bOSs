@@ -40,7 +40,6 @@ void RTC_init()
 void rtc_irq_handler()
 {
 	// Disable interrupts
-	cli();
 
 	// Disable NMI and select Register C
 	outb(REGISTER_C, NMI);
@@ -52,6 +51,5 @@ void rtc_irq_handler()
 	send_eoi(IRQ_NUM);
 
 	// Enable interrupts
-	sti();
  	asm volatile("leave;iret;");
 }
