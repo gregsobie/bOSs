@@ -20,7 +20,7 @@ void RTC_init()
 	// Set index
 	outb(REGISTER_B, NMI);
 	// Turn on bit 6 of Register B
-	outb(CMOS, val | MASKBIT6);
+	outb(val | MASKBIT6, CMOS);
 
 	/* Set Default Interrupt Rate */
 	// Disable NMI and select Register A
