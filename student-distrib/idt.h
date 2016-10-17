@@ -4,8 +4,6 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "RTC.h"
-//#include "idt_functions.h"
-//#include "idt_functions.S"
 #include "i8259.h"
 #include "debug.h"
 #include "multiboot.h"
