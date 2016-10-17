@@ -32,6 +32,7 @@ void RTC_init()
 	// Write rate into Register A (bottom 4 bits)
 	outb((val & RATEMASK) | rate, CMOS);
 
+	enable_irq(8);
 	// Enable interrupts
 	//sti();
 }
@@ -39,7 +40,7 @@ void RTC_init()
 void rtc_irq_handler()
 {
 	// Disable interrupts
-	//cli();
+	cli();
 
 	// Disable NMI and select Register C
 	outb(REGISTER_C, NMI);
@@ -51,5 +52,5 @@ void rtc_irq_handler()
 	send_eoi(IRQ_NUM);
 
 	// Enable interrupts
-	//sti();
+	sti();
 }

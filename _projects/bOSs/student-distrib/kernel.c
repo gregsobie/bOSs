@@ -9,6 +9,8 @@
 #include "debug.h"
 #include "RTC.h"
 #include "idt.h"
+#include "paging.h"
+#include "keyboard.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -147,20 +149,21 @@ entry (unsigned long magic, unsigned long addr)
 	}
 
 	/* Init the PIC */
-	//lidt(idt);
+
 	initialize_idt();
-	//i8259_init();
+	lidt(idt_desc_ptr);
+	i8259_init();
 	//enable_irq(0);
-	// RTC_init();
-	// enable_irq(8);
-	//enable_irq(1);
+	RTC_init();
+	keyboard_install(1);
+	
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 	
-	init_kernel_pd();
-	loadPageDirectory(kernel_page_directory);
-	enablePaging();
+	//init_kernel_pd();
+	//loadPageDirectory(kernel_page_directory);
+	//enablePaging();
 	//*((char *)0xB8000) = 'X';
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
@@ -168,6 +171,7 @@ entry (unsigned long magic, unsigned long addr)
 	 * without showing you any output */
 	printf("Enabling Interrupts\n");
 	sti();
+
 
 	/* Execute the first program (`shell') ... */
 
