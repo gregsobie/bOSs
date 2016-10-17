@@ -52,6 +52,6 @@ void keyboard_encoder_send_cmd(uint8_t cmd);
 void keyboard_set_leds(bool numlock, bool scrolllock, bool capslock);
 
 /* Interrupt handler */
-void key_irq_handler();
+extern void key_irq_handler();
 
 #endif
