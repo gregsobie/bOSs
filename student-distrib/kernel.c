@@ -8,6 +8,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "RTC.h"
+#include "idt.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -146,19 +147,24 @@ entry (unsigned long magic, unsigned long addr)
 	}
 
 	/* Init the PIC */
-	i8259_init();
+	//lidt(idt);
+	initialize_idt();
+	//i8259_init();
+	//enable_irq(0);
+	// RTC_init();
+	// enable_irq(8);
+	//enable_irq(1);
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
-	RTC_init();
+	
 
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
 	 * IDT correctly otherwise QEMU will triple fault and simple close
 	 * without showing you any output */
-	test_interrupts();
 	printf("Enabling Interrupts\n");
-	//sti();
+	sti();
 
 	/* Execute the first program (`shell') ... */
 

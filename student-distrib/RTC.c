@@ -10,7 +10,7 @@ void RTC_init()
 	rate = RTC_DEFAULT_RATE;
 
 	// Disable interrupts
-	cli();
+	//cli();
 
 	/* Turn on IRQ 8 */
 	// Disable NMI and select Register B
@@ -33,21 +33,23 @@ void RTC_init()
 	outb((val & RATEMASK) | rate, CMOS);
 
 	// Enable interrupts
-	sti();
+	//sti();
 }
 
 void rtc_irq_handler()
 {
 	// Disable interrupts
-	cli();
+	//cli();
 
 	// Disable NMI and select Register C
 	outb(REGISTER_C, NMI);
 	// Throw away contents
 	inb(CMOS);
+	
+	test_interrupts();
 	// Send end-of-interrupt signal
 	send_eoi(IRQ_NUM);
 
 	// Enable interrupts
-	sti();
+	//sti();
 }
