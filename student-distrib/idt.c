@@ -6,35 +6,16 @@
 #include "i8259.h"
 #include "debug.h"
 #include "multiboot.h"
-#include "idt_functions.h"
 
 
 void initialize_idt()
 {
-/*
-exceptions/interrupts = kernel cs, pl = 0 
-system calls = trap gates , pl = 3 
-*/
+	int i;
+	/*
+	exceptions/interrupts = kernel cs, dpl = 0 
+	system calls = trap gates , dpl = 3 
+	*/
 
-/*
-typedef union idt_desc_t {
-	uint32_t val[2];
-	struct {
-		uint16_t offset_15_00;
-		uint16_t seg_selector;
-		uint8_t reserved4;
-		uint32_t reserved3 : 1;
-		uint32_t reserved2 : 1;
-		uint32_t reserved1 : 1;
-		uint32_t size : 1;
-		uint32_t reserved0 : 1;
-		uint32_t dpl : 2;
-		uint32_t present : 1;
-		uint16_t offset_31_16;
-	} __attribute__((packed));
-} idt_desc_t;
-*/
-int i;
 	for (i=0;i<32;i++)
 		{
 		/*
@@ -52,32 +33,14 @@ int i;
 			idt[i].reserved0 = 0;
 		
 		}	
-/* place system calls(trap gates) at end of IDT */
+	/*
+	interrupt handlers
+	all are interrupt gates w kernel CS and priv = 0 
 
-	// for (i=(NUM_VEC -12);i<NUM_VEC;i++)
-	// {
-	// 		idt[i].present = 1;
-	// 		idt[i].seg_selector = KERNEL_CS;
-	// 		idt[i].dpl = 3;
-		
-	// 		idt[i].reserved1 = 1;
-	// 		idt[i].reserved2 = 1;
-	// 		idt[i].reserved3 = 1;
-	// 		idt[i].size = 1;
-	// 		idt[i].reserved0 = 0;
-		
-	// 		idt[i].reserved4 = 0;
-	// 		//SET_IDT_ENTRY(idt[i],sys_call);
-	// }
-/*
-interrupt handlers
-all are interrupt gates w kernel CS and priv = 0 
-
-idt[32] = timer chip
-idt[33] = keys
-idt[40] = rtc
-idt[44] = mouse 
-*/
+	idt[32] = timer chip
+	idt[33] = keys
+	idt[40] = rtc
+	*/
 
 	for (i=32;i<NUM_VEC;i++)
 	{
@@ -103,8 +66,8 @@ idt[44] = mouse
 	set idt entries 
 	first 32 = exceptions
 	next (256-32) = interrupts
-	last 12 = system calls(commented out)
-
+	0x80 will have the system call jump table function, but not yet
+	be sure to set dpl to 3 for that
 	*/
 	SET_IDT_ENTRY(idt[0],&de_handler);
 	SET_IDT_ENTRY(idt[1],&db_handler);
@@ -129,9 +92,6 @@ idt[44] = mouse
 	SET_IDT_ENTRY(idt[32],&pit_irq_handler);
 	SET_IDT_ENTRY(idt[33],&key_irq_handler);
 	SET_IDT_ENTRY(idt[40],&rtc_irq_handler);
-	//SET_IDT_ENTRY(idt[44],&mouse_irq_handler);
-	//SET_IDT_ENTRY(idt[45],&pic);
-
 
 	
 
@@ -142,210 +102,129 @@ idt[44] = mouse
 	
 
 }
+void halt(){
+	//When we implement program execution, we will need to extend/move this
+	asm volatile("hlt;");
+}
 void de_handler()
 {
 	cli();
 	printf("divide by zero exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 
 }
 void db_handler()
 {
 	cli();
 	printf("db exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void nmi_handler()
 {
 	cli();
 	printf("nmi exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void bp_handler()
 {
 	cli();
 	printf("bp exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void of_handler()
 {
 	cli();
 	printf("of exception");
-	while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 
 }
 void br_handler()
 {
 	cli();
 	printf("br exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void ud_handler()
 {
 	cli();
 	printf("ud exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void nm_handler()
 {
 	cli();
 	printf("nm exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 
 }
 void df_handler()
 {
 	cli();
 	printf("df exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void co_segment_overrun_handler()
 {
 	cli();
 	printf("co_segment_overrun exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void ts_handler()
 {
 	cli();
 	printf("ts exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void np_handler()
 {
 	cli();
 	printf("np exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void ss_handler()
 {
 	cli();
 	printf("ss exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void gp_handler()
 {
 	cli();
 	printf("gp exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void pf_handler()
 {
 	cli();
 	printf("pf exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void mf_handler()
 {
 	cli();
 	printf("mf exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void ac_handler()
 {
 	cli();
 	printf("ac exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void mc_handler()
 {
 	cli();
 	printf("mc exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void xf_handler()
 {
 	cli();
 	printf("xf exception");
-		while(1)
-	 {
-
-	 }
-	sti();
+	halt();
 }
 void pit_irq_handler()
 {
-	//cli();
-	//printf("pit irq handler ");
-	// while(1)
-	//   {
-
-	//   }
 	send_eoi(0);
-	//printf("sent pit irq eoi");
-	//sti();
-	//printf("restored interrupts");
  	asm volatile("leave;iret;");
 }
