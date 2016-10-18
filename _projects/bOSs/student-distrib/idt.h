@@ -34,7 +34,4 @@ extern void mc_handler();
 extern void xf_handler();
 
 extern void pit_irq_handler();
-//extern void key_irq_handler();
-extern void mouse_irq_handler();
-extern void pic_handler();
 #endif
