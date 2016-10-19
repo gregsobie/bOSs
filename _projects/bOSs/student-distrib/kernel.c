@@ -11,6 +11,7 @@
 #include "idt.h"
 #include "paging.h"
 #include "keyboard.h"
+#include "filesystem.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -57,6 +58,10 @@ entry (unsigned long magic, unsigned long addr)
 		int i;
 		module_t* mod = (module_t*)mbi->mods_addr;
 		while(mod_count < mbi->mods_count) {
+			fs_base = (boot_block_t *) mod->mod_start;
+			fs_end = (boot_block_t *) mod->mod_end;
+
+			printf("Module %d has string: 0x%#x\n", mod_count, (unsigned int)mod->string);			
 			printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
 			printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
 			printf("First few bytes of module:\n");
@@ -166,15 +171,20 @@ entry (unsigned long magic, unsigned long addr)
 	init_kernel_pd();
 	loadPageDirectory(kernel_page_directory);
 	enablePaging();
-	//*((char *)0x005) = 'X';
 	/* Enable interrupts */
 	/* Do not enable the following until after you have set up your
 	 * IDT correctly otherwise QEMU will triple fault and simple close
 	 * without showing you any output */
 	printf("Enabling Interrupts\n");
 	sti();
-
-
+	/*printf("\n");
+	clear();
+	printf("\n");
+	char inbuff[1024] = {0};*/
+	//printf("%d\n",test_read(".",&inbuff,80));
+	//test_read("frame0.txt",&inbuff,80);
+	//test_read(".",&inbuff,80);
+	//printf(inbuff);
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */
