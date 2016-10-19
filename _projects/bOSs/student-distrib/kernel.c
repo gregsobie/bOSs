@@ -177,14 +177,16 @@ entry (unsigned long magic, unsigned long addr)
 	 * without showing you any output */
 	printf("Enabling Interrupts\n");
 	sti();
-	/*printf("\n");
-	clear();
 	printf("\n");
-	char inbuff[1024] = {0};*/
+	clear();
+	char inbuff[1024] = {0};
 	//printf("%d\n",test_read(".",&inbuff,80));
-	//test_read("frame0.txt",&inbuff,80);
+	test_read("verylargetextwithverylongname.tx",&inbuff,1023);
+	//test_read("created.txt",&inbuff,1023);
 	//test_read(".",&inbuff,80);
-	//printf(inbuff);
+	//test_read(".",&inbuff,80);
+
+	printf("%s",inbuff);
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */

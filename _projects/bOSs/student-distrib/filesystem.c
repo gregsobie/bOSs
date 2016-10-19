@@ -26,7 +26,8 @@ int32_t dir_read (struct file * fp, char * outbuff, uint32_t bytes){
 		bytes = 32;
 	if(fp->f_pos/64 > fs_base->num_entries)
 		return 0;
-	strncpy(outbuff,((uint8_t *)fs_base) + fp->f_pos,bytes);
+	strncpy(outbuff,((char *)fs_base) + fp->f_pos,bytes);
+	fp->f_pos += 64;
 	return bytes;
 }
 int32_t dir_write (struct file * fp, const char * inbuff, uint32_t bytes){
@@ -53,17 +54,15 @@ int32_t test_read(const uint8_t* filename, const void* buf, int32_t nbytes){
 	f.f_inode = dentry.inode;
 	if(ret != 0)
 		return ret;
+	printf("File type: %d\n",dentry.type);
 	if(dentry.type == 0){
-		printf("rtc\n");
 		return -1;
 	}else if(dentry.type == 1){
 		f.f_op = &dir_ops;
-		printf("dir");
-			f.f_pos = 64;
-
 	}else if(dentry.type == 2){
 		f.f_op = &file_ops;
 	}
+	printf("File name: %s \n",(char *)filename);
 	ret = f.f_op->open(&f);
 	if(ret != 0) return ret;
 
@@ -75,10 +74,12 @@ int32_t test_read(const uint8_t* filename, const void* buf, int32_t nbytes){
 int32_t read_dentry_by_name (const uint8_t* fname, dentry_t* dentry){
 	int i;
 	uint32_t fname_len = strlen((char *)fname);
-	//TODO check for bug with non-terminated fname
+	if(fname_len == FILE_NAME_LEN +1 && fname[FILE_NAME_LEN] == '\0')
+		fname_len--;
 	if(fname_len > FILE_NAME_LEN) return -1;
-	for(i=1;i<fs_base->num_entries;i++){
+	for(i=0;i<fs_base->num_entries;i++){
 		dentry_int_t * d = &(fs_base->dentries[i]);
+		printf("%s\n",d->name);
 		if(!strncmp((char *)fname,d->name,fname_len)){
 			strncpy(dentry->name, d->name, FILE_NAME_LEN);
 			dentry->name[FILE_NAME_LEN] = '\0';
