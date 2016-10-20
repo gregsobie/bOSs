@@ -6,6 +6,9 @@
 #define FILE_NAME_LEN 32
 #define BLOCK_BYTES 4096
 
+#define FILE_RTC_TYPE 0
+#define FILE_DIR_TYPE 1
+#define FILE_DAT_TYPE 2
 
 typedef struct dentry{
 	char name[FILE_NAME_LEN+1];//leave room for null termination

@@ -55,11 +55,11 @@ int32_t test_read(const uint8_t* filename, const void* buf, int32_t nbytes){
 	if(ret != 0)
 		return ret;
 	printf("File type: %d\n",dentry.type);
-	if(dentry.type == 0){
+	if(dentry.type == FILE_RTC_TYPE){
 		return -1;
-	}else if(dentry.type == 1){
+	}else if(dentry.type == FILE_DIR_TYPE){
 		f.f_op = &dir_ops;
-	}else if(dentry.type == 2){
+	}else if(dentry.type == FILE_DAT_TYPE){
 		f.f_op = &file_ops;
 	}
 	printf("File name: %s \n",(char *)filename);
@@ -69,6 +69,27 @@ int32_t test_read(const uint8_t* filename, const void* buf, int32_t nbytes){
 	ret = f.f_op->read(&f,(char *)buf,nbytes);
 
 	return ret;
+}
+
+void show_fs_info(){
+	
+	printf("%d File Entries\n",fs_base->num_entries);
+	printf("%d inodes\n",fs_base->num_inodes);
+	printf("%d data blocks\n", (int)(fs_end-fs_base) - fs_base->num_inodes -1);
+	int i,i2;
+	for(i = 0;i< fs_base->num_entries;i++){
+		char name[33] = {0};
+		strncpy(name, fs_base->dentries[i].name, 32);
+		for(i2 = 0;i2<32;i2++){
+			if(name[i2] == '\0')
+				name[i2] = ' ';
+		}
+		uint32_t type = fs_base->dentries[i].type;
+		uint32_t inode = fs_base->dentries[i].inode;
+		printf("%s type: #%u inode: #%u\n",name,type,inode);
+
+	}
+
 }
 
 int32_t read_dentry_by_name (const uint8_t* fname, dentry_t* dentry){
