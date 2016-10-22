@@ -20,5 +20,9 @@
 // Define RTC functions
 extern void RTC_init();
 extern void rtc_irq_handler();
+extern int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes);
+extern int32_t RTC_open(const uint8_t* filename);
+extern int32_t RTC_write(int32_t fd, const void* buf, int32_t nbytes);
+extern int32_t RTC_close(int32_t fd);
 
 #endif
