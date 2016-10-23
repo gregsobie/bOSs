@@ -10,6 +10,7 @@
 
 static int screen_x;
 static int screen_y;
+static int screen_scroll;
 static char* video_mem = (char *)VIDEO;
 
 /*
@@ -24,6 +25,64 @@ clear(void)
 {
     int32_t i;
     for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
+        *(uint8_t *)(video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+    }
+    screen_x=0;
+    screen_y=9;
+    screen_scroll=0;
+    move_csr(screen_x, screen_y);
+}
+
+void delete_char(){
+	    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1)) = ' ';
+        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1) + 1) = ATTRIB;
+        screen_x--;
+        /* Ensures valid index: 0 <= screen_x < NUM_COLS */
+        screen_x %= NUM_COLS;
+        /* Decrement row if x index went negative */
+        if(screen_x==NUM_COLS-1)
+        	screen_y--;
+        move_csr(screen_x, screen_y);
+}
+
+/* Updates the hardware cursor: the little blinking line
+*  on the screen under the last character pressed! */
+void move_csr(int cursor_x, int cursor_y)
+{
+    unsigned temp;
+
+    /* The equation for finding the index in a linear
+    *  chunk of memory can be represented by:
+    *  Index = [(y * width) + x] */
+    temp = cursor_y * NUM_COLS + cursor_x;
+
+    /* This sends a command to indicies 14 and 15 in the
+    *  CRT Control Register of the VGA controller. These
+    *  are the high and low bytes of the index that show
+    *  where the hardware cursor is to be 'blinking'. To
+    *  learn more, you should look up some VGA specific
+    *  programming documents. A great start to graphics:
+    *  http://www.brackeen.com/home/vga */
+    outb(14, 0x3D4);
+    outb(temp >> 8, 0x3D5);
+    outb(15, 0x3D4);
+    outb(temp, 0x3D5);
+}
+
+/* Scrolls the screen */
+void scroll(void)
+{
+    int32_t i;
+    /* For each row, rewrite at 1 row above current location */
+    for(i=0; i<(NUM_ROWS - 1)*NUM_COLS; i++) 
+    {
+        *(uint8_t *)(video_mem + (i << 1)) = *(uint8_t *)(video_mem + ((i + NUM_COLS) << 1));
+        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+    }
+    /* Clear next line */
+    for(i=(NUM_ROWS - 1)*NUM_COLS; i<NUM_ROWS*NUM_COLS; i++) 
+    {
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
@@ -173,7 +232,7 @@ puts(int8_t* s)
 		putc(s[index]);
 		index++;
 	}
-
+	move_csr(screen_x, screen_y);
 	return index;
 }
 
@@ -194,9 +253,13 @@ putc(uint8_t c)
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
+    screen_x %= NUM_COLS;
+    screen_y = (screen_y + (screen_x / NUM_COLS));
+    if(screen_y % NUM_ROWS==0){
+        scroll();
+    }
+    move_csr(screen_x, screen_y);
 }
 
 /*

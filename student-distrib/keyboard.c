@@ -7,7 +7,7 @@
 #include "x86_desc.h"
 #include "i8259.h"
 
-bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl;
+bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl, typingLine;
 
 /* Character data corresponding to make codes */
 /* Zero denotes an unprintable character */
@@ -52,10 +52,12 @@ uint8_t caps_lock_and_shift[128] =  {
  	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
  	keyboard_set_leds(numlock, scrolllock, capslock);
+ 	cli();
 	enable_irq(irq);
+	sti();
 
  	/* Set shift, ctrl, and alt keys */
- 	left_shift = right_shift = alt = ctrl = false;
+ 	left_shift = right_shift = alt = ctrl = typingLine = false;
  }
 
 /* Read status from keyboard controller */
@@ -123,6 +125,7 @@ uint8_t caps_lock_and_shift[128] =  {
  	keyboard_scancode = keyboard_data & KEY_STATE_MASK;
  	
  	/* MSB=1 denotes key press, MSB=0 denotes key released */
+ 	/* Key is pressed */
  	if(!(keyboard_data & 0x80)){
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
  			left_shift = true;
@@ -136,6 +139,13 @@ uint8_t caps_lock_and_shift[128] =  {
  			numlock = true;
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = true;
+ 		else if(keyboard_scancode == KEYBOARD_ENTER){
+ 			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
+ 			line_buffer_index++;
+ 			if(typingLine)
+ 				typingLine=0;
+ 			line_buffer_index=0;
+ 		}
  		else{
  			/* Grab the proper character, depending on the modifier keys. */
 		 	/*if(capslock ^ (left_shift | right_shift))
@@ -165,6 +175,7 @@ uint8_t caps_lock_and_shift[128] =  {
 		 		keyboard_character = keyboard_chars[keyboard_scancode];
 		 		}
 		}
+	/* Key is released */
 	} else {
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
  			left_shift = false;
@@ -181,9 +192,64 @@ uint8_t caps_lock_and_shift[128] =  {
 	/* Prints pressed character to display */
  	//printf("%c %c\n", keyboard_scancode,keyboard_character);
  	*((char *)0xB8000) = keyboard_character;
+
  	/* Send End-of-Interrupt */
  	send_eoi(KEYBOARD_IRQ);
 
  	/* Unmask interrupt */
  	asm volatile("leave;iret;");
  }
+
+int32_t terminal_open(const uint8_t* filename){
+	//clear();
+	keyboard_install(KEYBOARD_IRQ);
+	return 0;
+}
+
+int32_t terminal_close(int32_t fd){
+	cli();
+	disable_irq(KEYBOARD_IRQ);
+	sti();
+	return 0;
+}
+
+int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
+	char* terminal_buffer = (char*)buf;
+	if(terminal_buffer==NULL)
+		return -1;
+	typingLine = true;
+	int i;
+	/* Reset buffers */
+	for(i=1; i<=128; i++){
+		*((uint8_t*)line_buffer+i) = '\0';
+		*((uint8_t*)terminal_buffer+i) = '\0';
+	}
+	/* Wait until enter key has been pressed */
+	while(typingLine);
+	/* Clear buffer to copy into */
+	for(i=1; i<=128; i++){
+		*((uint8_t*)buf+i) = '\0';
+	}
+	/* Copy from line_buffer into buf */
+	strcpy((int8_t*)buf, (int8_t*)line_buffer);
+	/* Clear line_buffer for next line */
+	for(i=1; i<=128; i++)
+		*((uint8_t*)line_buffer+i) = '\0';
+	return (strlen((int8_t*)buf));
+}
+
+int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
+	char* terminal_buffer = (char*)buf;
+	if(terminal_buffer==NULL)
+			return -1;
+	/* Write to screen */
+	cli();
+	int bytes_written=0;
+	int i;
+	for(i=0; i<nbytes; i++){
+		putc(terminal_buffer[i]);
+		bytes_written++;
+	}
+	sti();
+	return bytes_written;
+}
