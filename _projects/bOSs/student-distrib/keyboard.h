@@ -37,10 +37,14 @@
 #define KEYBOARD_ALT         0x38
 #define KEYBOARD_NUM_LOCK    0x45
 #define KEYBOARD_SCROLL_LOCK 0x46
+#define KEYBOARD_ENTER 		 0x1C
+#define KEYBOARD_LINEFEED 	 0x0A
 
 /* Stores the current state of certain keys */
-extern bool numlock, scrolllock, capslock, shift, alt, ctrl;
+//bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
 extern uint8_t _lastScanCode;
+static volatile uint8_t* line_buffer;
+static volatile int line_buffer_index;
 
 /* Prepares driver for use */
 extern void keyboard_install(int irq);
@@ -62,5 +66,10 @@ void keyboard_set_leds(bool numlock, bool scrolllock, bool capslock);
 
 /* Interrupt handler */
 extern void key_irq_handler();
+
+int32_t terminal_open(const uint8_t* filename);
+int32_t terminal_close(int32_t fd);
+int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes);
+int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
 
 #endif
