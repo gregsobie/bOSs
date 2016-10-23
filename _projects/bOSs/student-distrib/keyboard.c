@@ -28,6 +28,23 @@ uint8_t shift_keyboard_chars[128] = {
 	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
 	};
 
+uint8_t caps_lock_chars[128] =  {
+	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
+	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0, 'A', 'S',	
+	 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0,'\\', 'Z', 'X', 'C', 'V', 
+	 	'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
+	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
+	};
+uint8_t caps_lock_and_shift[128] =  {
+	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
+	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0, 0, 'a', 's',	
+	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0,'|', 'z', 'x', 'c', 'v', 
+	 	'b', 'n', 'm', '<', '>', '?', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
+	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
+	};
+
+
+
 /* Prepares driver for use */
  void keyboard_install (int irq){
  	/* Installs interrupt handler */
@@ -121,10 +138,32 @@ uint8_t shift_keyboard_chars[128] = {
  			scrolllock = true;
  		else{
  			/* Grab the proper character, depending on the modifier keys. */
-		 	if(capslock ^ (left_shift | right_shift))
+		 	/*if(capslock ^ (left_shift | right_shift))
 		 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
+			*/
+		 	if (capslock & (left_shift | right_shift))
+		 		{
+		 			keyboard_character = caps_lock_and_shift[keyboard_scancode];
+		 		}
+		 	else if (left_shift | right_shift)
+		 	{
+		 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
+		 	}	
+
+
+		 	else if (capslock)
+		 	{
+
+		 		
+		 		
+		 			keyboard_character = caps_lock_chars[keyboard_scancode];
+		 		
+		 	}
+
 		 	else
+		 		{
 		 		keyboard_character = keyboard_chars[keyboard_scancode];
+		 		}
 		}
 	} else {
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
