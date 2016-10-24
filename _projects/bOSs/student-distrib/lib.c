@@ -8,9 +8,9 @@
 #define NUM_ROWS 25
 #define ATTRIB 0x7
 
-static int screen_x;
-static int screen_y;
-static int screen_scroll;
+ int screen_x;
+ int screen_y;
+ int screen_scroll;
 static char* video_mem = (char *)VIDEO;
 
 /*
@@ -24,7 +24,7 @@ void
 clear(void)
 {
     int32_t i;
-    for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
+    for(i=0; i<(NUM_ROWS*NUM_COLS); i++) {
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
@@ -38,7 +38,7 @@ void delete_char(){
 	    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1)) = ' ';
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1) + 1) = ATTRIB;
         screen_x--;
-        /* Ensures valid index: 0 <= screen_x < NUM_COLS */
+         /*Ensures valid index: 0 <= screen_x < NUM_COLS */
         screen_x %= NUM_COLS;
         /* Decrement row if x index went negative */
         if(screen_x==NUM_COLS-1)
@@ -55,15 +55,15 @@ void move_csr(int cursor_x, int cursor_y)
     /* The equation for finding the index in a linear
     *  chunk of memory can be represented by:
     *  Index = [(y * width) + x] */
-    temp = cursor_y * NUM_COLS + cursor_x;
+     temp = cursor_y * NUM_COLS + cursor_x;
 
-    /* This sends a command to indicies 14 and 15 in the
-    *  CRT Control Register of the VGA controller. These
-    *  are the high and low bytes of the index that show
-    *  where the hardware cursor is to be 'blinking'. To
-    *  learn more, you should look up some VGA specific
-    *  programming documents. A great start to graphics:
-    *  http://www.brackeen.com/home/vga */
+    //  This sends a command to indicies 14 and 15 in the
+    // *  CRT Control Register of the VGA controller. These
+    // *  are the high and low bytes of the index that show
+    // *  where the hardware cursor is to be 'blinking'. To
+    // *  learn more, you should look up some VGA specific
+    // *  programming documents. A great start to graphics:
+    // *  http://www.brackeen.com/home/vga 
     outb(14, 0x3D4);
     outb(temp >> 8, 0x3D5);
     outb(15, 0x3D4);
