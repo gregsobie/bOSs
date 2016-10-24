@@ -143,9 +143,17 @@ uint8_t caps_lock_and_shift[128] =  {
  			ctrl = true;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
  			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
- 			line_buffer_index++;
- 			line_buffer_index %= 128; // 0<line_buffer_index<127
- 			terminal_read(fd, line_buffer, line_buffer_index);
+ 			//line_buffer_index++;
+ 			//line_buffer_index %= 128; // 0<line_buffer_index<127
+ 			typingLine = false;
+ 			if(getY() == 24){
+ 				scroll();
+ 			 	move_csr(0,getY());					
+ 			}
+ 			else
+			 	move_csr(0,getY()+1);	
+
+
  			//if(typingLine)
  			//	typingLine=0;
  			//typingLine=0;
@@ -160,7 +168,7 @@ uint8_t caps_lock_and_shift[128] =  {
  		}
  		else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
  				clear();
- 				move_csr(0,24);
+ 				move_csr(0,0);
  				while(line_buffer_index > 0)
  					line_buffer[line_buffer_index--] = '\0';
  				line_buffer_index = 0;
@@ -175,30 +183,33 @@ uint8_t caps_lock_and_shift[128] =  {
 				putc(keyboard_character);
 		} */
  		else{
- 			/* Grab the proper character, depending on the modifier keys. */
-		 	/*if(capslock ^ (left_shift | right_shift))
-		 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
-			*/
-		 	if (capslock & (left_shift | right_shift))
-		 	{
-		 			keyboard_character = caps_lock_and_shift[keyboard_scancode];
-		 	}
-		 	else if (left_shift | right_shift)
-		 	{
-		 			keyboard_character = shift_keyboard_chars[keyboard_scancode];
-		 	}	
-		 	else if (capslock)
-		 	{
-		 			keyboard_character = caps_lock_chars[keyboard_scancode];
-		 	}
-		 	else
-		 	{
-		 		keyboard_character = keyboard_chars[keyboard_scancode];
-		 	}
-		 	line_buffer[line_buffer_index] = keyboard_character;
-		 	line_buffer_index++;
-		 	line_buffer_index%=128;
-		 	terminal_write(fd, line_buffer, line_buffer_index);
+ 			if(line_buffer_index < 127){
+	 			/* Grab the proper character, depending on the modifier keys. */
+			 	/*if(capslock ^ (left_shift | right_shift))
+			 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
+				*/
+			 	if (capslock & (left_shift | right_shift))
+			 	{
+			 			keyboard_character = caps_lock_and_shift[keyboard_scancode];
+			 	}
+			 	else if (left_shift | right_shift)
+			 	{
+			 			keyboard_character = shift_keyboard_chars[keyboard_scancode];
+			 	}	
+			 	else if (capslock)
+			 	{
+			 			keyboard_character = caps_lock_chars[keyboard_scancode];
+			 	}
+			 	else
+			 	{
+			 			keyboard_character = keyboard_chars[keyboard_scancode];
+			 	}
+			 	line_buffer[line_buffer_index] = keyboard_character;
+			 	terminal_write(fd, line_buffer + line_buffer_index, 1);	
+			 	if(getX() == 79 && getY()==24)
+			 		scroll();
+			 	line_buffer_index++;
+			}
  		}
 	/* Key is released */
 	} else {
@@ -226,15 +237,10 @@ uint8_t caps_lock_and_shift[128] =  {
  }
 
 int32_t terminal_open(const uint8_t* filename){
-	//clear();
-	keyboard_install(KEYBOARD_IRQ);
 	return 0;
 }
 
 int32_t terminal_close(int32_t fd){
-	cli();
-	disable_irq(KEYBOARD_IRQ);
-	sti();
 	return 0;
 }
 
@@ -243,30 +249,17 @@ int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 		return -1;
-	scroll();
-	//typingLine = false;
-	int i;
-	/* Reset buffers */
-	/* for(i=0; i<128; i++){
-		*((uint8_t*)line_buffer+i) = '\0';
-		*((uint8_t*)terminal_buffer+i) = '\0';
-	} */
 	/* Wait until enter key has been pressed */
-	//while(typingLine);
-	/* Clear buffer to copy into */
-	/*for(i=0; i<128; i++){
-		*((uint8_t*)buf+i) = '\0';
-	}*/
-
-	/* Copy from line_buffer into buf */
+	while(typingLine);
+	typingLine = true;
+	if(nbytes > line_buffer_index+1)
+		nbytes = line_buffer_index+1;
+	/* Copy from line_buffer into terminal_buffer */
+	int i;
 	for(i=0; i<nbytes; i++){
 		terminal_buffer[i] = line_buffer[i];
-		//line_buffer[i] = '\0';
 	}
-
-	//strcpy((int8_t*)buf, (int8_t*)line_buffer);
 	/* Reset cursor position, line_buffer index */
-	move_csr(0,24);
  	line_buffer_index=0;
 	return (strlen((int8_t*)terminal_buffer));
 }
@@ -276,7 +269,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
-	move_csr(0,24);
+	//move_csr(0,24);
 	/* Write to screen */
 	cli();
 	int bytes_written=0;
@@ -285,6 +278,8 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 		putc(terminal_buffer[i]);
 		bytes_written++;
 	}
+	move_csr(getX(),getY());
 	sti();
+
 	return bytes_written;
 }
