@@ -162,6 +162,225 @@ entry (unsigned long magic, unsigned long addr)
 	enable_irq(2);
 
 	RTC_init();
+	/* Test RTC write and read functions */
+	// int32_t inbuff[1] = {2};
+	// int temp = 2;
+	// RTC_write(temp,&inbuff,4);
+	// clear();
+	// int i=0;
+	// int j=0;
+	// int x=0;
+	// for (i=0;i<2;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 4;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<4;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 8;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<8;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 16;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<16;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 32;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<32;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 64;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<64;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 128;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<128;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 256;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<256;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 512;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<512;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// inbuff[0] = 1024;
+	// RTC_write(temp,&inbuff,4);
+	// j = 0;
+	// x = 0;
+	// for (i=0;i<1024;i++)
+	// {
+	// 	j++;
+	// 	x++;
+	// 	RTC_read(temp,NULL,0);
+	// 	if (j == 80)
+	// 	{
+	// 		printf("\n");
+	// 		j = 0;
+	// 	}
+	// 	if (x % (80*25) == 0)
+	// 	{
+	// 		clear();
+	// 		x = 0;
+	// 	}
+	// }
+	// clear();
+	// printf("\n");
+	// printf("Open Return Value: %d\n", RTC_open(NULL));
+	// printf("Close Return Value: %d\n", RTC_close(NULL));
+	
+	
 	keyboard_install(1);
 	
 
