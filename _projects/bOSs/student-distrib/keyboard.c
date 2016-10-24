@@ -149,7 +149,8 @@ uint8_t caps_lock_and_shift[128] =  {
  			 	move_csr(0,getY());
  			/* Else move current entry to next row */
  			}else
-			 	move_csr(0,getY()+1);	
+			 	move_csr(0,getY()+1);
+			line_buffer_index=0;	
 		/* Deletes the last typed character and updates the
 		 * line input buffer to reflect element's absense */
  		}else if(keyboard_scancode == KEYBOARD_BACKSPACE){
