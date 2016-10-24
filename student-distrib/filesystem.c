@@ -5,7 +5,7 @@
 #include "syscall.h"
 
 void init_filesystem(){
-	fops_table[FILE_DAT_TYPE] = dir_ops;
+	fops_table[FILE_DIR_TYPE] = dir_ops;
 	fops_table[FILE_DAT_TYPE] = file_ops;
 }
 

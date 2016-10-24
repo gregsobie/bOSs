@@ -403,15 +403,15 @@ entry (unsigned long magic, unsigned long addr)
 
 
 	//Test Filesystem info
-	
+	/*
 	printf("\n");
 	clear();
 	printf("\n");
 	show_fs_info();
-	
+	*/
 
 	//Test File read
-	/*
+	init_filesystem();
 	printf("\n");
 	clear();
 	printf("\n");
@@ -419,7 +419,7 @@ entry (unsigned long magic, unsigned long addr)
 	printf("%d\n",test_read(".",&inbuff,80));
 	test_read("created.txt",&inbuff,1023);
 	printf("%s",inbuff);
-	*/
+	
 	
 	//Terminal Testing
 	/*
