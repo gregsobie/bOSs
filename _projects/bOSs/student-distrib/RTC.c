@@ -2,6 +2,7 @@
 
 volatile int rtc_interrupt_occured;
 
+/* Initializes RTC before it can take interrupts */
 void RTC_init()
 {
 	// Initialize rate variable
@@ -10,9 +11,6 @@ void RTC_init()
 	// frequency = 32768 >> (rate-1)
 	// 			 = 32768 >> (15-1) = 2 Hz
 	rate = RTC_DEFAULT_RATE;
-
-	// Disable interrupts
-	//cli();
 
 	/* Turn on IRQ 8 */
 	// Disable NMI and select Register B
@@ -23,8 +21,6 @@ void RTC_init()
 	outb(REGISTER_B, NMI);
 	// Turn on bit 6 of Register B
 	outb(val | MASKBIT6, CMOS);
-
-	rtc_interrupt_occured = 1;
 
 	/* Set Default Interrupt Rate */
 	// Disable NMI and select Register A
@@ -37,10 +33,9 @@ void RTC_init()
 	outb((val & RATEMASK) | rate, CMOS);
 
 	enable_irq(IRQ_NUM);
-	// Enable interrupts
-	//sti();
 }
 
+/* Handles RTC interrupts */
 void rtc_irq_handler()
 {
 
@@ -60,12 +55,15 @@ void rtc_irq_handler()
  	asm volatile("leave;iret;");
 }
 
+
+/* Sets up data to handle RTC device */
 int32_t RTC_open(const uint8_t* filename)
 {
 	RTC_init();
 	return 0;
 }
 
+/* Reads data from RTC device */
 int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes)
 {
 	cli();
@@ -75,55 +73,59 @@ int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes)
 	{
 		
 	}
-	//putc('1');
+	//putc('1'); // Test
 	return 0;
 }
 
+
+/* Sets passed in frequency/writes frequency to RTC */
 int32_t RTC_write(int32_t fd, const void* buf, int32_t nbytes)
 {
-	if (nbytes == 4)
+	// Checks if 4-byte integer is being passed in
+	if (nbytes == BYTE4)
 	{
 		unsigned char rate;
-
+		// Extracts frequency passed in
 		int32_t fq = *(int32_t*)buf;
-
-		if (fq == 1024)
+		// Checks which rate should be set according to which frequency was passed in
+		// frequency = 32768 >> (rate-1)
+		if (fq == FREQ1)
 		{
-			rate = 0x06;
+			rate = RATE1;
 		}
-		else if(fq == 512)
+		else if(fq == FREQ2)
 		{
-			rate = 0x07;
+			rate = RATE2;
 		}
-		else if (fq == 256)
+		else if (fq == FREQ3)
 		{
-			rate = 0x08;
+			rate = RATE3;
 		}
-		else if (fq == 128)
+		else if (fq == FREQ4)
 		{
-			rate = 0x09;
+			rate = RATE4;
 		}
-		else if (fq == 64)
+		else if (fq == FREQ5)
 		{
-			rate = 0x0A;
+			rate = RATE5;
 		}
-		else if (fq == 32)
+		else if (fq == FREQ6)
 		{
-			rate = 0x0B;
+			rate = RATE6;
 		}
-		else if (fq == 16)
+		else if (fq == FREQ7)
 		{
-			rate = 0x0C;
+			rate = RATE7;
 		}
-		else if (fq == 8)
+		else if (fq == FREQ8)
 		{
-			rate = 0x0D;
+			rate = RATE8;
 		}
-		else if (fq == 4)
+		else if (fq == FREQ9)
 		{
-			rate = 0x0E;
+			rate = RATE9;
 		}
-		else if (fq == 2)
+		else if (fq == RTC_DEFAULT_FREQ)
 		{
 			rate = RTC_DEFAULT_RATE;
 		}
@@ -144,6 +146,7 @@ int32_t RTC_write(int32_t fd, const void* buf, int32_t nbytes)
 	return -1;
 }
 
+/* Closes RTC device and makes it available for later calls to open */
 int32_t RTC_close(int32_t fd)
 {
 	return 0;
