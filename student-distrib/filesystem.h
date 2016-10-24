@@ -9,7 +9,7 @@
 #define FILE_RTC_TYPE 0
 #define FILE_DIR_TYPE 1
 #define FILE_DAT_TYPE 2
-
+#define DENTRY_SIZE 64
 typedef struct dentry{
 	char name[FILE_NAME_LEN+1];//leave room for null termination
 	uint32_t type;
