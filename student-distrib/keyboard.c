@@ -107,12 +107,12 @@ uint8_t shift_keyboard_chars[128] = {
  	uint8_t keyboard_scancode;
  	uint8_t keyboard_character;
  	uint8_t keyboard_data;
- 	//int32_t fd=0;
+ 	uint32_t fd=0;
  	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
  	keyboard_data = inb(KEYBOARD_ENCODER_IN_BUF);
  	keyboard_scancode = keyboard_data & KEY_STATE_MASK;
  	
- 	/* MSB=1 denotes key press, MSB=0 denotes key released */
+ 	/* MSB=0 denotes key press, MSB=1 denotes key released */
  	/* Key is pressed */
  	if(!(keyboard_data & 0x80)){
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
@@ -134,32 +134,64 @@ uint8_t shift_keyboard_chars[128] = {
  			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
  			//printf("after line buffer");
  			line_buffer_index++;
- 			typingLine=0;
+ 			line_buffer_index %= 128; // 0<line_buffer_index<127
+ 			terminal_read(fd, line_buffer, line_buffer_index);
+ 			//if(typingLine)
+ 			//	typingLine=0;
+ 			//typingLine=0;
  			//move_csr(0,0);
- 			line_buffer_index=0;
-
- 		} else if(keyboard_scancode == KEYBOARD_BACKSPACE){
+ 			//line_buffer_index=0;
+ 		}
+ 		else if(keyboard_scancode == KEYBOARD_BACKSPACE){
  			if(line_buffer_index > 0){
  				delete_char();
  				line_buffer_index--;
  			}
- 		}else{
- 			if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
- 				clear();
- 				move_csr(0,0);
- 				while(line_buffer_index > 0)
- 					line_buffer[line_buffer_index--] = '\0';
- 				line_buffer_index = 0;
- 			}else if(line_buffer_index < 127){
+ 		}
+ 		else{
+ 			/* Grab the proper character, depending on the modifier keys. */
+		 	/*if(capslock ^ (left_shift | right_shift))
+		 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
+			*/
+		 	if (capslock & (left_shift | right_shift))
+		 	{
+		 			//keyboard_character = caps_lock_and_shift[keyboard_scancode];
+		 	}
+		 	else if (left_shift | right_shift)
+		 	{
+		 			//keyboard_character = shift_keyboard_chars[keyboard_scancode];
+		 	}	
+		 	else if (capslock)
+		 	{
+		 			//keyboard_character = caps_lock_chars[keyboard_scancode];
+		 	}
+		 	else
+		 	{
+		 		keyboard_character = keyboard_chars[keyboard_scancode];
+		 	}
+		 	line_buffer[line_buffer_index] = keyboard_character;
+		 	line_buffer_index++;
+		 	line_buffer_index%=128;
+		 	//printf("Before terminal write ");
+		 	terminal_write(fd, line_buffer, line_buffer_index);
+ 		}
+ 		//else{
+ 			//if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
+ 				//clear();
+ 				//move_csr(0,0);
+ 				//while(line_buffer_index > 0)
+ 				//	line_buffer[line_buffer_index--] = '\0';
+ 				//line_buffer_index = 0;
+ 			//}else if(line_buffer_index < 127){
 	 			/* Grab the proper character, depending on the modifier keys. */
-			 	if(capslock ^ (left_shift | right_shift))
-			 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
-				else 
-				 	keyboard_character = keyboard_chars[keyboard_scancode];
-				line_buffer[line_buffer_index++] = keyboard_character;
-				putc(keyboard_character);
-			}
-		}
+			 	//if(capslock ^ (left_shift | right_shift))
+			 	//	keyboard_character = shift_keyboard_chars[keyboard_scancode];
+				//else 
+				// 	keyboard_character = keyboard_chars[keyboard_scancode];
+				//line_buffer[line_buffer_index++] = keyboard_character;
+				//putc(keyboard_character);
+			//}
+		//}
 	/* Key is released */
 	} else {
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
@@ -183,6 +215,8 @@ uint8_t shift_keyboard_chars[128] = {
 
  	send_eoi(KEYBOARD_IRQ);
 
+ 	//*((char *)0xB8000) = keyboard_character;
+	//putc(keyboard_character);
  	/* Unmask interrupt */
  	asm volatile("leave;iret;");
  }
@@ -200,35 +234,43 @@ int32_t terminal_close(int32_t fd){
 	return 0;
 }
 
-int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
+int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
+	//printf("I'm reading from the terminal now");
 	char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 		return -1;
-	typingLine = true;
+	//typingLine = false;
 	int i;
 	/* Reset buffers */
-	for(i=0; i<128; i++){
+	/* for(i=0; i<128; i++){
 		*((uint8_t*)line_buffer+i) = '\0';
 		*((uint8_t*)terminal_buffer+i) = '\0';
-	}
+	} */
 	/* Wait until enter key has been pressed */
-	while(typingLine);
+	//while(typingLine);
 	/* Clear buffer to copy into */
-	for(i=0; i<128; i++){
+	/*for(i=0; i<128; i++){
 		*((uint8_t*)buf+i) = '\0';
-	}
+	}*/
+
 	/* Copy from line_buffer into buf */
-	strcpy((int8_t*)buf, (int8_t*)line_buffer);
-	/* Clear line_buffer for next line */
-	for(i=0; i<128; i++)
-		*((uint8_t*)line_buffer+i) = '\0';
-	return (strlen((int8_t*)buf));
+	for(i=0; i<nbytes; i++)
+		terminal_buffer[i] = line_buffer[i];
+		//line_buffer[i] = '\0';
+
+	//strcpy((int8_t*)buf, (int8_t*)line_buffer);
+	/* Reset cursor position, line_buffer index */
+	move_csr(0,1);
+ 	line_buffer_index=0;
+	return (strlen((int8_t*)terminal_buffer));
 }
 
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
+	//printf("I'm writing to the terminal now");
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
+	move_csr(0,1);
 	/* Write to screen */
 	cli();
 	int bytes_written=0;
