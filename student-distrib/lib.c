@@ -29,7 +29,7 @@ clear(void)
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
     screen_x=0;
-    screen_y=9;
+    screen_y=1;
     screen_scroll=0;
     move_csr(screen_x, screen_y);
 }

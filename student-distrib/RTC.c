@@ -68,12 +68,14 @@ int32_t RTC_open(const uint8_t* filename)
 
 int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes)
 {
+	cli();
 	rtc_interrupt_occured = 0;
-
+	sti();
 	while(rtc_interrupt_occured == 0)
 	{
-
+		
 	}
+	//putc('1');
 	return 0;
 }
 
