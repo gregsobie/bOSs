@@ -106,8 +106,14 @@ uint8_t caps_lock_and_shift[128] =  {
  	keyboard_encoder_send_cmd (data);
  }
 
-/* Keyboard interrupt handler -- called whenever
-	scan codes are sent to the controller */
+/* Keyboard interrupt handler -- called after each keypress
+	
+	INPUTS: NONE
+	OUTPUTS: NONE
+	SIDE EFFECTS: writes to line_buffer, interacts with keyboard ports
+	sets various flags. 
+
+	*/
  void key_irq_handler(){
  	/* Check scan codes */
  	//keyboard_ctrl_read_status
@@ -214,13 +220,40 @@ uint8_t caps_lock_and_shift[128] =  {
  	asm volatile("leave;iret;");
  }
 
+
+/*
+INPUTS: filename
+OUTPUTS: return 0 on success 
+
+System call for open of file type = terminal 
+
+*/
+
 int32_t terminal_open(const uint8_t* filename){
 	return 0;
 }
 
+/*
+INPUTS: file descriptor 
+OUTPUTS: return 0 on success 
+
+System call for close of file type = terminal 
+
+*/
+
 int32_t terminal_close(int32_t fd){
 	return 0;
 }
+
+
+/*
+INPUTS: file descriptor, buf, nbytes
+OUTPUTS: return amount of bytes written 
+
+takes buffer passed in, and copies from line_buffer into the terminal buffer
+
+*/
+
 
 int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	char* terminal_buffer = (char*)buf;
@@ -244,6 +277,14 @@ int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	return (strlen((int8_t*)terminal_buffer));
 }
 
+
+/*
+INPUTS: file descriptor, buf, nbytes
+OUTPUTS: return amount of bytes written 
+
+takes buffer passed in, and outputs to terminal and update cursor 
+
+*/
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
