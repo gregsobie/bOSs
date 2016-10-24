@@ -32,6 +32,6 @@ extern void mf_handler();
 extern void ac_handler();
 extern void mc_handler();
 extern void xf_handler();
-
+extern void generic_handler();
 extern void pit_irq_handler();
 #endif
