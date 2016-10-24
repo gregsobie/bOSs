@@ -7,7 +7,8 @@
 #include "x86_desc.h"
 #include "i8259.h"
 
-bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl, typingLine;
+bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl;
+volatile bool typingLine;
 
 /* Character data corresponding to make codes */
 /* Zero denotes an unprintable character */
@@ -18,8 +19,8 @@ uint8_t keyboard_chars[128] = {
 	 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
 	    0,	0,   0,   0,   0,   0,   0,   0,   0, 0, 0,	0, 0, 0, 0,	/* Page Up */
 	  	'-', 0,	0, 0, '+', 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	/* Remaining keys undefined */
-	};
-/* Capital letters */
+	}
+;/* Capital letters */
 uint8_t shift_keyboard_chars[128] = {
 	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
 	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 'A', 'S',	
@@ -50,6 +51,8 @@ uint8_t caps_lock_and_shift[128] =  {
  	/* Installs interrupt handler */
  	//SET_IDT_ENTRY(idt[33], key_irq_handler);
  	/* Set lock keys and LED lights */
+ 	left_shift = right_shift = alt = ctrl = typingLine = false;
+ 	line_buffer_index=0;
  	numlock = scrolllock = capslock = false;
  	keyboard_set_leds(numlock, scrolllock, capslock);
  	cli();
@@ -57,7 +60,7 @@ uint8_t caps_lock_and_shift[128] =  {
 	sti();
 
  	/* Set shift, ctrl, and alt keys */
- 	left_shift = right_shift = alt = ctrl = typingLine = false;
+ 	
  }
 
 /* Read status from keyboard controller */
@@ -119,7 +122,7 @@ uint8_t caps_lock_and_shift[128] =  {
  	uint8_t keyboard_scancode;
  	uint8_t keyboard_character;
  	uint8_t keyboard_data;
-
+ 	int32_t fd=0;
  	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
  	keyboard_data = inb(KEYBOARD_ENCODER_IN_BUF);
  	keyboard_scancode = keyboard_data & KEY_STATE_MASK;
@@ -140,11 +143,18 @@ uint8_t caps_lock_and_shift[128] =  {
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = true;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
+ 			//printf("before line buffer");
  			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
+ 			//printf("after line buffer");
  			line_buffer_index++;
+ 			line_buffer_index = line_buffer_index % 128;
  			if(typingLine)
  				typingLine=0;
+ 			
+ 			
+ 			//move_csr(0,0);
  			line_buffer_index=0;
+
  		}
  		else{
  			/* Grab the proper character, depending on the modifier keys. */
@@ -173,6 +183,8 @@ uint8_t caps_lock_and_shift[128] =  {
 		 	else
 		 		{
 		 		keyboard_character = keyboard_chars[keyboard_scancode];
+				line_buffer[line_buffer_index] = keyboard_character;
+
 		 		}
 		}
 	/* Key is released */
@@ -191,11 +203,16 @@ uint8_t caps_lock_and_shift[128] =  {
 	//clear();
 	/* Prints pressed character to display */
  	//printf("%c %c\n", keyboard_scancode,keyboard_character);
- 	*((char *)0xB8000) = keyboard_character;
-
+ 	
+	//terminal_read();
  	/* Send End-of-Interrupt */
+ 	//terminal_read(fd,&line_buffer,line_buffer_index);
+ 	//terminal_write(fd,&line_buffer,line_buffer_index);
+
  	send_eoi(KEYBOARD_IRQ);
 
+ 	//*((char *)0xB8000) = keyboard_character;
+	putc(keyboard_character);
  	/* Unmask interrupt */
  	asm volatile("leave;iret;");
  }
@@ -220,26 +237,26 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
 	typingLine = true;
 	int i;
 	/* Reset buffers */
-	for(i=1; i<=128; i++){
+	for(i=0; i<128; i++){
 		*((uint8_t*)line_buffer+i) = '\0';
 		*((uint8_t*)terminal_buffer+i) = '\0';
 	}
 	/* Wait until enter key has been pressed */
 	while(typingLine);
 	/* Clear buffer to copy into */
-	for(i=1; i<=128; i++){
+	for(i=0; i<128; i++){
 		*((uint8_t*)buf+i) = '\0';
 	}
 	/* Copy from line_buffer into buf */
 	strcpy((int8_t*)buf, (int8_t*)line_buffer);
 	/* Clear line_buffer for next line */
-	for(i=1; i<=128; i++)
+	for(i=0; i<128; i++)
 		*((uint8_t*)line_buffer+i) = '\0';
 	return (strlen((int8_t*)buf));
 }
 
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
-	char* terminal_buffer = (char*)buf;
+	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
 	/* Write to screen */

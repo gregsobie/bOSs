@@ -43,8 +43,8 @@
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
 extern uint8_t _lastScanCode;
-static volatile uint8_t* line_buffer;
-static volatile int line_buffer_index;
+uint8_t line_buffer[128];
+volatile int line_buffer_index;
 
 /* Prepares driver for use */
 extern void keyboard_install(int irq);
