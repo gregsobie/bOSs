@@ -39,6 +39,8 @@
 #define KEYBOARD_SCROLL_LOCK 0x46
 #define KEYBOARD_ENTER 		 0x1C
 #define KEYBOARD_LINEFEED 	 0x0A
+#define KEYBOARD_BACKSPACE   0x0E
+#define KEYBOARD_LEFT_CONTROL 0x1D
 
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;

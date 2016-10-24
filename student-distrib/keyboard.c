@@ -29,21 +29,6 @@ uint8_t shift_keyboard_chars[128] = {
 	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
 	};
 
-uint8_t caps_lock_chars[128] =  {
-	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
-	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0, 'A', 'S',	
-	 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0,'\\', 'Z', 'X', 'C', 'V', 
-	 	'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
-	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
-	};
-uint8_t caps_lock_and_shift[128] =  {
-	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
-	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0, 0, 'a', 's',	
-	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0,'|', 'z', 'x', 'c', 'v', 
-	 	'b', 'n', 'm', '<', '>', '?', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
-	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
-	};
-
 
 
 /* Prepares driver for use */
@@ -122,7 +107,7 @@ uint8_t caps_lock_and_shift[128] =  {
  	uint8_t keyboard_scancode;
  	uint8_t keyboard_character;
  	uint8_t keyboard_data;
- 	int32_t fd=0;
+ 	//int32_t fd=0;
  	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
  	keyboard_data = inb(KEYBOARD_ENCODER_IN_BUF);
  	keyboard_scancode = keyboard_data & KEY_STATE_MASK;
@@ -142,50 +127,38 @@ uint8_t caps_lock_and_shift[128] =  {
  			numlock = true;
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = true;
+ 		else if(keyboard_scancode == KEYBOARD_LEFT_CONTROL)
+ 			ctrl = true;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
  			//printf("before line buffer");
  			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
  			//printf("after line buffer");
  			line_buffer_index++;
- 			line_buffer_index = line_buffer_index % 128;
- 			if(typingLine)
- 				typingLine=0;
- 			
- 			
+ 			typingLine=0;
  			//move_csr(0,0);
  			line_buffer_index=0;
 
- 		}
- 		else{
- 			/* Grab the proper character, depending on the modifier keys. */
-		 	/*if(capslock ^ (left_shift | right_shift))
-		 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
-			*/
-		 	if (capslock & (left_shift | right_shift))
-		 		{
-		 			keyboard_character = caps_lock_and_shift[keyboard_scancode];
-		 		}
-		 	else if (left_shift | right_shift)
-		 	{
-		 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
-		 	}	
-
-
-		 	else if (capslock)
-		 	{
-
-		 		
-		 		
-		 			keyboard_character = caps_lock_chars[keyboard_scancode];
-		 		
-		 	}
-
-		 	else
-		 		{
-		 		keyboard_character = keyboard_chars[keyboard_scancode];
-				line_buffer[line_buffer_index] = keyboard_character;
-
-		 		}
+ 		} else if(keyboard_scancode == KEYBOARD_BACKSPACE){
+ 			if(line_buffer_index > 0){
+ 				delete_char();
+ 				line_buffer_index--;
+ 			}
+ 		}else{
+ 			if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
+ 				clear();
+ 				move_csr(0,0);
+ 				while(line_buffer_index > 0)
+ 					line_buffer[line_buffer_index--] = '\0';
+ 				line_buffer_index = 0;
+ 			}else if(line_buffer_index < 127){
+	 			/* Grab the proper character, depending on the modifier keys. */
+			 	if(capslock ^ (left_shift | right_shift))
+			 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
+				else 
+				 	keyboard_character = keyboard_chars[keyboard_scancode];
+				line_buffer[line_buffer_index++] = keyboard_character;
+				putc(keyboard_character);
+			}
 		}
 	/* Key is released */
 	} else {
@@ -199,10 +172,9 @@ uint8_t caps_lock_and_shift[128] =  {
  			numlock = false;
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = false;
+ 	 	else if(keyboard_scancode == KEYBOARD_LEFT_CONTROL)
+ 			ctrl = false;
 	}
-	//clear();
-	/* Prints pressed character to display */
- 	//printf("%c %c\n", keyboard_scancode,keyboard_character);
  	
 	//terminal_read();
  	/* Send End-of-Interrupt */
@@ -211,8 +183,6 @@ uint8_t caps_lock_and_shift[128] =  {
 
  	send_eoi(KEYBOARD_IRQ);
 
- 	//*((char *)0xB8000) = keyboard_character;
-	putc(keyboard_character);
  	/* Unmask interrupt */
  	asm volatile("leave;iret;");
  }
