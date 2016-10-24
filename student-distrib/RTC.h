@@ -15,7 +15,27 @@
 #define MASKBIT6	0x40
 #define RATEMASK	0xF0
 #define IRQ_NUM		8
-#define RTC_DEFAULT_RATE	0x0F		
+#define BYTE4		4
+#define RTC_DEFAULT_RATE	0x0F
+#define RATE1		0x06
+#define RATE2		0x07	
+#define RATE3		0x08	
+#define RATE4		0x09	
+#define RATE5		0x0A
+#define RATE6		0x0B	
+#define RATE7		0x0C	
+#define RATE8		0x0D
+#define RATE9		0x0E
+#define FREQ1		1024
+#define FREQ2		512	
+#define FREQ3		256	
+#define FREQ4		128	
+#define FREQ5		64	
+#define FREQ6		32
+#define FREQ7		16
+#define FREQ8		8
+#define FREQ9		4
+#define RTC_DEFAULT_FREQ	2										
 
 // Define RTC functions
 extern void RTC_init();
