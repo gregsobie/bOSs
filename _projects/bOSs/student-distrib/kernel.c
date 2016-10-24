@@ -416,7 +416,7 @@ entry (unsigned long magic, unsigned long addr)
 	clear();
 	printf("\n");
 	char inbuff[1024] = {0};
-	printf("%d\n",test_read(".",&inbuff,80));
+	//printf("%d\n",test_read(".",&inbuff,80));
 	test_read("created.txt",&inbuff,1023);
 	printf("%s",inbuff);
 	
