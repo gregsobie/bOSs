@@ -2,7 +2,7 @@
 #define _FILESYSTEM_H
 
 #include "types.h"
-
+#include "syscall.h"
 #define FILE_NAME_LEN 32
 #define BLOCK_BYTES 4096
 
@@ -39,31 +39,13 @@ typedef struct inode{
 extern boot_block_t * fs_base;
 extern boot_block_t * fs_end;
 
-struct file;
-
-struct file_operations{
-	int32_t (*read) (struct file *, char *, uint32_t);
-	int32_t (*write) (struct file *, const char *, uint32_t);
-	int32_t (*open) (struct file *);
-	int32_t (*close) (struct file *);
-} file_operations_t;
-
-struct file{
-	struct file_operations * f_op;
-	uint32_t f_inode;
-	uint32_t f_pos;
-	uint32_t flags;
-};
-
-
-
 
 int32_t file_read (struct file *, char *, uint32_t);
 int32_t file_write (struct file *, const char *, uint32_t);
 int32_t file_open (struct file *);
 int32_t file_close (struct file *);
 
-static struct file_operations file_ops = {
+static struct file_operations file_ops __attribute__((unused)) = {
 	.read = file_read,
 	.write = file_write,
 	.open = file_open,
@@ -75,7 +57,7 @@ int32_t dir_write (struct file *, const char *, uint32_t);
 int32_t dir_open (struct file *);
 int32_t dir_close (struct file *);
 
-static struct file_operations dir_ops = {
+static struct file_operations dir_ops __attribute__((unused)) = {
 	.read = dir_read,
 	.write = dir_write,
 	.open = dir_open,
