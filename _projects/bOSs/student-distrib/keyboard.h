@@ -26,7 +26,8 @@
 #define KEYBOARD_CTRL_STATUS_MASK_TIMEOUT	 0x40 	//0100 0000
 #define KEYBOARD_CTRL_STATUS_MASK_PARITY	 0x80 	//1000 0000
 
-#define KEY_STATE_MASK 0x7F
+#define KEY_STATE_MASK 	0x7F
+#define KEY_STATUS_MASK 0x80
 /* Keyboard encoder commands */
 #define KEYBOARD_ENCODER_CMD_SET_LED 		 0xED
 
@@ -41,6 +42,15 @@
 #define KEYBOARD_LINEFEED 	 0x0A
 #define KEYBOARD_BACKSPACE   0x0E
 #define KEYBOARD_LEFT_CONTROL 0x1D
+
+ /*Helpful constants*/
+ #define MAX_COL_INDEX 	79
+ #define MAX_ROW_INDEX 	24
+ #define MAX_BUF_INDEX 	127
+ #define BYTE_PER_CHAR 	1
+ #define MASK_BIT_2 	4
+ #define MASK_BIT_1 	2
+ #define MASK_BIT_0 	1
 
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
@@ -69,9 +79,16 @@ void keyboard_set_leds(bool numlock, bool scrolllock, bool capslock);
 /* Interrupt handler */
 extern void key_irq_handler();
 
+/* Opens the terminal driver */
 int32_t terminal_open(const uint8_t* filename);
+
+/* Closes the terminal driver */
 int32_t terminal_close(int32_t fd);
+
+/* Reads input from keyboard (128-char line) */
 int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes);
+
+/* Write input to screen (characters pressed) */
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
 
 #endif

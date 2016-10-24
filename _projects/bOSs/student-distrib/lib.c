@@ -19,7 +19,6 @@ static char* video_mem = (char *)VIDEO;
 *   Return Value: none
 *	Function: Clears video memory
 */
-
 void
 clear(void)
 {
@@ -34,6 +33,8 @@ clear(void)
     move_csr(screen_x, screen_y);
 }
 
+/* Removes a character from the console by replacing
+ * with a space character and updating location */
 void delete_char(){
 	    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1)) = ' ';
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1) + 1) = ATTRIB;
@@ -72,34 +73,30 @@ void move_csr(int cursor_x, int cursor_y)
     outb(temp, 0x3D5);
 }
 
-/* Scrolls the screen */
+/* Scrolls all elements of the screen upward by one row */
 void scroll(void)
 {
     int32_t i;
     /* For each row, rewrite at 1 row above current location */
-    for(i=0; i<(NUM_ROWS - 1)*NUM_COLS; i++) 
-    {
+    for(i=0; i<(NUM_ROWS - 1)*NUM_COLS; i++){
         *(uint8_t *)(video_mem + (i << 1)) = *(uint8_t *)(video_mem + ((i + NUM_COLS) << 1));
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
     /* Clear next line */
-    for(i=(NUM_ROWS - 1)*NUM_COLS; i<NUM_ROWS*NUM_COLS; i++) 
-    {
+    for(i=(NUM_ROWS - 1)*NUM_COLS; i<NUM_ROWS*NUM_COLS; i++){
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
 
+/* Returns the current y-position */
 int getY(){
 	return screen_y;
 }
 
+/* Returns the current x-position */
 int getX(){
 	return screen_x;
-}
-
-void incY(){
-	screen_y++;
 }
 
 /* Standard printf().
@@ -227,7 +224,6 @@ format_char_switch:
 		}
 		buf++;
 	}
-
 	return (buf - format);
 }
 
@@ -237,7 +233,6 @@ format_char_switch:
 *   Return Value: Number of bytes written
 *	Function: Output a string to the console 
 */
-
 int32_t
 puts(int8_t* s)
 {
@@ -256,20 +251,23 @@ puts(int8_t* s)
 *   Return Value: void
 *	Function: Output a character to the console 
 */
-
 void
 putc(uint8_t c)
 {
-    if(c == '\n' || c == '\r') {
+	/* If new line or return character is output to console,
+	 * update current position */
+    if(c == '\n' || c == '\r'){
         screen_y++;
         screen_x=0;
-    } else {
+    /* Else print the character to the console */
+    }else{
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
         screen_y += screen_x / NUM_COLS;
     	screen_x %= NUM_COLS;
     }
+    /* If current row falls off screen, adjust for visibility */
     if(screen_y == NUM_ROWS){
         screen_y--;
         scroll();
