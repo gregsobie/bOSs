@@ -51,6 +51,8 @@ void delete_char(){
 void move_csr(int cursor_x, int cursor_y)
 {
     unsigned temp;
+    screen_x=cursor_x;
+    screen_y=cursor_y;
 
     /* The equation for finding the index in a linear
     *  chunk of memory can be represented by:
@@ -254,8 +256,8 @@ putc(uint8_t c)
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
     }
+    screen_y += screen_x / NUM_COLS;
     screen_x %= NUM_COLS;
-    screen_y = (screen_y + (screen_x / NUM_COLS));
     if(screen_y % NUM_ROWS==0){
         scroll();
     }
