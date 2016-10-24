@@ -160,7 +160,7 @@ uint8_t caps_lock_and_shift[128] =  {
  		}
  		else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
  				clear();
- 				move_csr(0,0);
+ 				move_csr(0,24);
  				while(line_buffer_index > 0)
  					line_buffer[line_buffer_index--] = '\0';
  				line_buffer_index = 0;
@@ -243,6 +243,7 @@ int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 		return -1;
+	scroll();
 	//typingLine = false;
 	int i;
 	/* Reset buffers */
@@ -258,13 +259,14 @@ int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	}*/
 
 	/* Copy from line_buffer into buf */
-	for(i=0; i<nbytes; i++)
+	for(i=0; i<nbytes; i++){
 		terminal_buffer[i] = line_buffer[i];
 		//line_buffer[i] = '\0';
+	}
 
 	//strcpy((int8_t*)buf, (int8_t*)line_buffer);
 	/* Reset cursor position, line_buffer index */
-	move_csr(0,1);
+	move_csr(0,24);
  	line_buffer_index=0;
 	return (strlen((int8_t*)terminal_buffer));
 }
@@ -274,7 +276,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
-	move_csr(0,1);
+	move_csr(0,24);
 	/* Write to screen */
 	cli();
 	int bytes_written=0;

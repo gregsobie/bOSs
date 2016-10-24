@@ -29,7 +29,7 @@ clear(void)
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
     screen_x=0;
-    screen_y=1;
+    screen_y=24;
     screen_scroll=0;
     move_csr(screen_x, screen_y);
 }
@@ -258,7 +258,8 @@ putc(uint8_t c)
     }
     screen_y += screen_x / NUM_COLS;
     screen_x %= NUM_COLS;
-    if(screen_y % NUM_ROWS==0){
+    screen_y %= NUM_ROWS;
+    if(screen_y==0){
         scroll();
     }
     move_csr(screen_x, screen_y);
