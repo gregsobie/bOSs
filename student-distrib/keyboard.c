@@ -10,8 +10,8 @@
 bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl;
 volatile bool typingLine;
 
-/* Character data corresponding to make codes */
-/* Zero denotes an unprintable character */
+/* Character data corresponding to make codes, where
+ * Zero denotes an unprintable character */
 uint8_t keyboard_chars[128] = {
 	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
 	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a', 's',	
@@ -19,8 +19,8 @@ uint8_t keyboard_chars[128] = {
 	 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
 	    0,	0,   0,   0,   0,   0,   0,   0,   0, 0, 0,	0, 0, 0, 0,	/* Page Up */
 	  	'-', 0,	0, 0, '+', 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	/* Remaining keys undefined */
-	}
-;/* Capital letters */
+	};
+/* Capital letters and symbols */
 uint8_t shift_keyboard_chars[128] = {
 	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
 	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 'A', 'S',	
@@ -28,24 +28,36 @@ uint8_t shift_keyboard_chars[128] = {
 	 	'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
 	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
 	};
+/* Capital letters and numbers */
+uint8_t caps_lock_chars[128] =  {
+	    0,  0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
+	 	'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0, 'A', 'S',	
+	 	'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0,'\\', 'Z', 'X', 'C', 'V', 
+	 	'B', 'N', 'M', ',', '.', '/', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
+	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
+	};
+/* Lowercase letters and symbols */
+uint8_t caps_lock_and_shift[128] =  {
+	    0,  0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
+	 	'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0, 0, 'a', 's',	
+	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0,'|', 'z', 'x', 'c', 'v', 
+	 	'b', 'n', 'm', '<', '>', '?', 0, '*', 0, ' ', 0, 0,	0, 0, 0, 0, 0, 0, 0, 0, 0,
+	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
+	};
 
 
 
 /* Prepares driver for use */
  void keyboard_install (int irq){
- 	/* Installs interrupt handler */
- 	//SET_IDT_ENTRY(idt[33], key_irq_handler);
- 	/* Set lock keys and LED lights */
+ 	/* Set shift, ctrl, and alt keys */
  	left_shift = right_shift = alt = ctrl = typingLine = false;
  	line_buffer_index=0;
+ 	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
  	keyboard_set_leds(numlock, scrolllock, capslock);
  	cli();
 	enable_irq(irq);
 	sti();
-
- 	/* Set shift, ctrl, and alt keys */
- 	
  }
 
 /* Read status from keyboard controller */
@@ -124,15 +136,13 @@ uint8_t shift_keyboard_chars[128] = {
  		else if(keyboard_scancode == KEYBOARD_ALT)
  			alt = true;
  		else if(keyboard_scancode == KEYBOARD_NUM_LOCK)
- 			numlock = true;
+ 			numlock = !numlock;
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
- 			scrolllock = true;
+ 			scrolllock = !scrolllock;
  		else if(keyboard_scancode == KEYBOARD_LEFT_CONTROL)
  			ctrl = true;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
- 			//printf("before line buffer");
  			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
- 			//printf("after line buffer");
  			line_buffer_index++;
  			line_buffer_index %= 128; // 0<line_buffer_index<127
  			terminal_read(fd, line_buffer, line_buffer_index);
@@ -148,6 +158,22 @@ uint8_t shift_keyboard_chars[128] = {
  				line_buffer_index--;
  			}
  		}
+ 		else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
+ 				clear();
+ 				move_csr(0,0);
+ 				while(line_buffer_index > 0)
+ 					line_buffer[line_buffer_index--] = '\0';
+ 				line_buffer_index = 0;
+ 		}
+ 		/* else if(line_buffer_index < 127){
+	 			// Grab the proper character, depending on the modifier keys.
+			 	if(capslock ^ (left_shift | right_shift))
+			 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
+				else 
+				 	keyboard_character = keyboard_chars[keyboard_scancode];
+				line_buffer[line_buffer_index++] = keyboard_character;
+				putc(keyboard_character);
+		} */
  		else{
  			/* Grab the proper character, depending on the modifier keys. */
 		 	/*if(capslock ^ (left_shift | right_shift))
@@ -155,15 +181,15 @@ uint8_t shift_keyboard_chars[128] = {
 			*/
 		 	if (capslock & (left_shift | right_shift))
 		 	{
-		 			//keyboard_character = caps_lock_and_shift[keyboard_scancode];
+		 			keyboard_character = caps_lock_and_shift[keyboard_scancode];
 		 	}
 		 	else if (left_shift | right_shift)
 		 	{
-		 			//keyboard_character = shift_keyboard_chars[keyboard_scancode];
+		 			keyboard_character = shift_keyboard_chars[keyboard_scancode];
 		 	}	
 		 	else if (capslock)
 		 	{
-		 			//keyboard_character = caps_lock_chars[keyboard_scancode];
+		 			keyboard_character = caps_lock_chars[keyboard_scancode];
 		 	}
 		 	else
 		 	{
@@ -172,26 +198,8 @@ uint8_t shift_keyboard_chars[128] = {
 		 	line_buffer[line_buffer_index] = keyboard_character;
 		 	line_buffer_index++;
 		 	line_buffer_index%=128;
-		 	//printf("Before terminal write ");
 		 	terminal_write(fd, line_buffer, line_buffer_index);
  		}
- 		//else{
- 			//if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
- 				//clear();
- 				//move_csr(0,0);
- 				//while(line_buffer_index > 0)
- 				//	line_buffer[line_buffer_index--] = '\0';
- 				//line_buffer_index = 0;
- 			//}else if(line_buffer_index < 127){
-	 			/* Grab the proper character, depending on the modifier keys. */
-			 	//if(capslock ^ (left_shift | right_shift))
-			 	//	keyboard_character = shift_keyboard_chars[keyboard_scancode];
-				//else 
-				// 	keyboard_character = keyboard_chars[keyboard_scancode];
-				//line_buffer[line_buffer_index++] = keyboard_character;
-				//putc(keyboard_character);
-			//}
-		//}
 	/* Key is released */
 	} else {
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
@@ -200,10 +208,6 @@ uint8_t shift_keyboard_chars[128] = {
  			right_shift = false; 		
  		else if(keyboard_scancode == KEYBOARD_ALT)
  			alt = false;
- 		else if(keyboard_scancode == KEYBOARD_NUM_LOCK)
- 			numlock = false;
- 		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
- 			scrolllock = false;
  	 	else if(keyboard_scancode == KEYBOARD_LEFT_CONTROL)
  			ctrl = false;
 	}
