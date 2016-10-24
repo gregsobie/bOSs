@@ -403,12 +403,12 @@ entry (unsigned long magic, unsigned long addr)
 
 
 	//Test Filesystem info
-	/*
+	
 	printf("\n");
 	clear();
 	printf("\n");
 	show_fs_info();
-	*/
+	
 
 	//Test File read
 	/*
