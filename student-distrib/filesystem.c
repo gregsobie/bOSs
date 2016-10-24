@@ -2,6 +2,12 @@
 #include "lib.h"
 #include "types.h"
 #include "idt.h"
+#include "syscall.h"
+
+void init_filesystem(){
+	fops_table[FILE_DAT_TYPE] = dir_ops;
+	fops_table[FILE_DAT_TYPE] = file_ops;
+}
 
 int32_t file_read (struct file * fp, char * outbuff, uint32_t bytes){
 	uint32_t read = read_data(fp->f_inode,fp->f_pos,(uint8_t *)outbuff,bytes);
@@ -58,9 +64,9 @@ int32_t test_read(const uint8_t* filename, const void* buf, int32_t nbytes){
 	if(dentry.type == FILE_RTC_TYPE){
 		return -1;
 	}else if(dentry.type == FILE_DIR_TYPE){
-		f.f_op = &dir_ops;
+		f.f_op = &fops_table[FILE_DIR_TYPE];
 	}else if(dentry.type == FILE_DAT_TYPE){
-		f.f_op = &file_ops;
+		f.f_op = &fops_table[FILE_DAT_TYPE];
 	}
 	printf("File name: %s \n",(char *)filename);
 	ret = f.f_op->open(&f);
