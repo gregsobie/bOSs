@@ -16,6 +16,9 @@ void clear(void);
 void delete_char(void);
 void move_csr(int cursor_x, int cursor_y);
 void scroll(void);
+int getX(void);
+int getY(void);
+void incY(void);
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);

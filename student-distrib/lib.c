@@ -8,9 +8,9 @@
 #define NUM_ROWS 25
 #define ATTRIB 0x7
 
- int screen_x;
- int screen_y;
- int screen_scroll;
+static int screen_x;
+static int screen_y;
+static int screen_scroll;
 static char* video_mem = (char *)VIDEO;
 
 /*
@@ -29,7 +29,7 @@ clear(void)
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
     screen_x=0;
-    screen_y=24;
+    screen_y=0;
     screen_scroll=0;
     move_csr(screen_x, screen_y);
 }
@@ -88,6 +88,18 @@ void scroll(void)
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
+}
+
+int getY(){
+	return screen_y;
+}
+
+int getX(){
+	return screen_x;
+}
+
+void incY(){
+	screen_y++;
 }
 
 /* Standard printf().
@@ -255,14 +267,13 @@ putc(uint8_t c)
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
+        screen_y += screen_x / NUM_COLS;
+    	screen_x %= NUM_COLS;
     }
-    screen_y += screen_x / NUM_COLS;
-    screen_x %= NUM_COLS;
-    screen_y %= NUM_ROWS;
-    if(screen_y==0){
+    if(screen_y == NUM_ROWS){
+        screen_y--;
         scroll();
     }
-    move_csr(screen_x, screen_y);
 }
 
 /*
