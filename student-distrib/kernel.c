@@ -420,14 +420,16 @@ entry (unsigned long magic, unsigned long addr)
 	test_read("created.txt",&inbuff,1023);
 	printf("%s",inbuff);
 	*/
+	
 	//Terminal Testing
-
+	/*
 	unsigned char inbuff[1024] = {0};
 	while(true){
 		terminal_read(0, inbuff, 391);
 		if(!strncmp(inbuff,"input",5))
 			terminal_write(0,"output\n",7);
-	}
+	} */
+
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */

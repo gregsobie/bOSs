@@ -45,8 +45,6 @@ uint8_t caps_lock_and_shift[128] =  {
 	    0, 0, 0, 0, 0, '-', 0, 0, 0,'+', 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, /* Remaining keys undefined */
 	};
 
-
-
 /* Prepares driver for use */
  void keyboard_install (int irq){
  	/* Set shift, ctrl, and alt keys */
@@ -101,7 +99,7 @@ uint8_t caps_lock_and_shift[128] =  {
  	uint8_t data = 0;
 
  	/* Set or clear LEDs */
- 	data = ((capslock<<2)&4) | ((numlock<<1)&2) | (scrolllock&1);
+ 	data = ((capslock<<2)&MASK_BIT_2) | ((numlock<<1)&MASK_BIT_1) | (scrolllock&MASK_BIT_0);
 
  	/* Send the command -- update keyboard LEDS */
  	keyboard_encoder_send_cmd (KEYBOARD_ENCODER_CMD_SET_LED);
@@ -126,88 +124,72 @@ uint8_t caps_lock_and_shift[128] =  {
  	
  	/* MSB=0 denotes key press, MSB=1 denotes key released */
  	/* Key is pressed */
- 	if(!(keyboard_data & 0x80)){
+ 	if(!(keyboard_data & KEY_STATUS_MASK)){
  		if(keyboard_scancode == KEYBOARD_LEFT_SHIFT)
  			left_shift = true;
  		else if(keyboard_scancode == KEYBOARD_RIGHT_SHIFT)
  			right_shift = true;
- 		else if(keyboard_scancode == KEYBOARD_CAPS_LOCK)
- 			capslock = !capslock;
  		else if(keyboard_scancode == KEYBOARD_ALT)
  			alt = true;
+ 		else if(keyboard_scancode == KEYBOARD_LEFT_CONTROL)
+ 			ctrl = true;
+ 		else if(keyboard_scancode == KEYBOARD_CAPS_LOCK)
+ 			capslock = !capslock;
  		else if(keyboard_scancode == KEYBOARD_NUM_LOCK)
  			numlock = !numlock;
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = !scrolllock;
- 		else if(keyboard_scancode == KEYBOARD_LEFT_CONTROL)
- 			ctrl = true;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
+ 			/* Input line must end with a linefeed character */
  			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
- 			//line_buffer_index++;
- 			//line_buffer_index %= 128; // 0<line_buffer_index<127
  			typingLine = false;
- 			if(getY() == 24){
+ 			/* If located at max row, move all other entries upward */
+ 			if(getY() == MAX_ROW_INDEX){
  				scroll();
- 			 	move_csr(0,getY());					
- 			}
- 			else
+ 			 	move_csr(0,getY());
+ 			/* Else move current entry to next row */
+ 			}else
 			 	move_csr(0,getY()+1);	
-
-
- 			//if(typingLine)
- 			//	typingLine=0;
- 			//typingLine=0;
- 			//move_csr(0,0);
- 			//line_buffer_index=0;
- 		}
- 		else if(keyboard_scancode == KEYBOARD_BACKSPACE){
+		/* Deletes the last typed character and updates the
+		 * line input buffer to reflect element's absense */
+ 		}else if(keyboard_scancode == KEYBOARD_BACKSPACE){
  			if(line_buffer_index > 0){
  				delete_char();
  				line_buffer_index--;
  			}
- 		}
- 		else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
+ 		/* Resets the terminal by clearing screen, setting cursor
+ 		 * to original position, and clearing input line buffer */
+ 		}else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
  				clear();
  				move_csr(0,0);
  				while(line_buffer_index > 0)
  					line_buffer[line_buffer_index--] = '\0';
  				line_buffer_index = 0;
- 		}
- 		/* else if(line_buffer_index < 127){
-	 			// Grab the proper character, depending on the modifier keys.
-			 	if(capslock ^ (left_shift | right_shift))
-			 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
-				else 
-				 	keyboard_character = keyboard_chars[keyboard_scancode];
-				line_buffer[line_buffer_index++] = keyboard_character;
-				putc(keyboard_character);
-		} */
- 		else{
- 			if(line_buffer_index < 127){
+ 		}else{
+ 			/* If input line buffer is not full */
+ 			if(line_buffer_index < MAX_BUF_INDEX){
 	 			/* Grab the proper character, depending on the modifier keys. */
-			 	/*if(capslock ^ (left_shift | right_shift))
-			 		keyboard_character = shift_keyboard_chars[keyboard_scancode];
-				*/
-			 	if (capslock & (left_shift | right_shift))
-			 	{
+	 			/* Both caps lock and shift are active */
+			 	if(capslock & (left_shift | right_shift)){
 			 			keyboard_character = caps_lock_and_shift[keyboard_scancode];
-			 	}
-			 	else if (left_shift | right_shift)
-			 	{
+			 	/* Shift key is active */
+			 	}else if(left_shift | right_shift){
 			 			keyboard_character = shift_keyboard_chars[keyboard_scancode];
-			 	}	
-			 	else if (capslock)
-			 	{
+			 	/* Caps lock is active */
+			 	}else if(capslock){
 			 			keyboard_character = caps_lock_chars[keyboard_scancode];
-			 	}
-			 	else
-			 	{
+			 	/* Neither caps lock or shift key are active */
+			 	}else{
 			 			keyboard_character = keyboard_chars[keyboard_scancode];
 			 	}
+			 	/* Store character to input line buffer and echo to terminal */
 			 	line_buffer[line_buffer_index] = keyboard_character;
-			 	terminal_write(fd, line_buffer + line_buffer_index, 1);	
-			 	if(getX() == 79 && getY()==24)
+			 	terminal_write(fd, line_buffer + line_buffer_index, BYTE_PER_CHAR);
+			 	/* If X is at max column and Y is at max row,
+			 	 * shift all elements upward by one row */
+			 	if(getX() == MAX_COL_INDEX && getY()==MAX_ROW_INDEX)
 			 		scroll();
+			 	/* Another key has been pressed */
 			 	line_buffer_index++;
 			}
  		}
@@ -223,15 +205,10 @@ uint8_t caps_lock_and_shift[128] =  {
  			ctrl = false;
 	}
  	
-	//terminal_read();
  	/* Send End-of-Interrupt */
- 	//terminal_read(fd,&line_buffer,line_buffer_index);
- 	//terminal_write(fd,&line_buffer,line_buffer_index);
-
  	send_eoi(KEYBOARD_IRQ);
 
  	//*((char *)0xB8000) = keyboard_character;
-	//putc(keyboard_character);
  	/* Unmask interrupt */
  	asm volatile("leave;iret;");
  }
@@ -245,13 +222,15 @@ int32_t terminal_close(int32_t fd){
 }
 
 int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
-	//printf("I'm reading from the terminal now");
 	char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 		return -1;
 	/* Wait until enter key has been pressed */
 	while(typingLine);
+	/* Any key pressed after enter should be
+	 * a part of the next line */
 	typingLine = true;
+	/* We will read at most 128 bytes per line */
 	if(nbytes > line_buffer_index+1)
 		nbytes = line_buffer_index+1;
 	/* Copy from line_buffer into terminal_buffer */
@@ -259,27 +238,24 @@ int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	for(i=0; i<nbytes; i++){
 		terminal_buffer[i] = line_buffer[i];
 	}
-	/* Reset cursor position, line_buffer index */
+	/* Reset input line buffer index */
  	line_buffer_index=0;
 	return (strlen((int8_t*)terminal_buffer));
 }
 
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
-	//printf("I'm writing to the terminal now");
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
-	//move_csr(0,24);
-	/* Write to screen */
-	cli();
 	int bytes_written=0;
 	int i;
+	/* Write to screen and update cursor */
+	cli();
 	for(i=0; i<nbytes; i++){
 		putc(terminal_buffer[i]);
 		bytes_written++;
 	}
 	move_csr(getX(),getY());
 	sti();
-
 	return bytes_written;
 }
