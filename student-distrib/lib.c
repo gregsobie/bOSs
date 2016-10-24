@@ -48,7 +48,9 @@ void delete_char(){
 }
 
 /* Updates the hardware cursor: the little blinking line
-*  on the screen under the last character pressed! */
+*  on the screen under the last character pressed! 
+	INPUTS: desired x & y coordinates to change hardware cursor
+	OUTPUTS: None												*/
 void move_csr(int cursor_x, int cursor_y)
 {
     unsigned temp;
@@ -73,7 +75,13 @@ void move_csr(int cursor_x, int cursor_y)
     outb(temp, 0x3D5);
 }
 
-/* Scrolls all elements of the screen upward by one row */
+/*
+INPUTS: None
+OUTPUTS: None
+
+Resets typing / screen to top left corner. Similar to clear 
+
+*/
 void scroll(void)
 {
     int32_t i;
@@ -89,12 +97,24 @@ void scroll(void)
     }
 }
 
-/* Returns the current y-position */
+/*
+INPUTS: none
+OUTPUTS: return current screen y-position
+
+
+
+*/
 int getY(){
 	return screen_y;
 }
 
-/* Returns the current x-position */
+/*
+INPUTS: none
+OUTPUTS: return current screen s-position
+
+
+
+*/
 int getX(){
 	return screen_x;
 }
