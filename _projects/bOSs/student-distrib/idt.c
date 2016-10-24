@@ -31,6 +31,8 @@ void initialize_idt()
 			idt[i].reserved1 = 1;
 			idt[i].size = 1;
 			idt[i].reserved0 = 0;
+
+			SET_IDT_ENTRY(idt[i],&generic_handler);
 		
 		}	
 	/*
@@ -84,10 +86,10 @@ void initialize_idt()
 	SET_IDT_ENTRY(idt[12],&ss_handler);
 	SET_IDT_ENTRY(idt[13],&gp_handler);
 	SET_IDT_ENTRY(idt[14],&pf_handler);
-	SET_IDT_ENTRY(idt[15],&mf_handler);
-	SET_IDT_ENTRY(idt[16],&ac_handler);
-	SET_IDT_ENTRY(idt[17],&mc_handler);
-	SET_IDT_ENTRY(idt[18],&xf_handler);
+	SET_IDT_ENTRY(idt[16],&mf_handler);
+	SET_IDT_ENTRY(idt[17],&ac_handler);
+	SET_IDT_ENTRY(idt[18],&mc_handler);
+	SET_IDT_ENTRY(idt[19],&xf_handler);
 
 	SET_IDT_ENTRY(idt[32],&pit_irq_handler);
 	SET_IDT_ENTRY(idt[33],&key_irq_handler);
@@ -221,6 +223,12 @@ void xf_handler()
 {
 	cli();
 	printf("xf exception");
+	halt();
+}
+void generic_handler()
+{
+	cli();
+	printf("Unknown exception");
 	halt();
 }
 void pit_irq_handler()
