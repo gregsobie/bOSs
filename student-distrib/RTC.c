@@ -59,6 +59,7 @@ void rtc_irq_handler()
 /* Sets up data to handle RTC device */
 int32_t RTC_open(const uint8_t* filename)
 {
+	// Initializes RTC device
 	RTC_init();
 	return 0;
 }
@@ -67,8 +68,9 @@ int32_t RTC_open(const uint8_t* filename)
 int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes)
 {
 	cli();
-	rtc_interrupt_occured = 0;
+	rtc_interrupt_occured = 0; 
 	sti();
+	// Waits for interrupt to occur
 	while(rtc_interrupt_occured == 0)
 	{
 		
