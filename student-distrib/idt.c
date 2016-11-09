@@ -104,7 +104,7 @@ void initialize_idt()
 	
 
 }
-void halt(){
+void fail(){
 	//When we implement program execution, we will need to extend/move this
 	asm volatile("hlt;");
 }
@@ -112,124 +112,124 @@ void de_handler()
 {
 	cli();
 	printf("divide by zero exception");
-	halt();
+	fail();
 
 }
 void db_handler()
 {
 	cli();
 	printf("db exception");
-	halt();
+	fail();
 }
 void nmi_handler()
 {
 	cli();
 	printf("nmi exception");
-	halt();
+	fail();
 }
 void bp_handler()
 {
 	cli();
 	printf("bp exception");
-	halt();
+	fail();
 }
 void of_handler()
 {
 	cli();
 	printf("of exception");
-	halt();
+	fail();
 
 }
 void br_handler()
 {
 	cli();
 	printf("br exception");
-	halt();
+	fail();
 }
 void ud_handler()
 {
 	cli();
 	printf("ud exception");
-	halt();
+	fail();
 }
 void nm_handler()
 {
 	cli();
 	printf("nm exception");
-	halt();
+	fail();
 
 }
 void df_handler()
 {
 	cli();
 	printf("df exception");
-	halt();
+	fail();
 }
 void co_segment_overrun_handler()
 {
 	cli();
 	printf("co_segment_overrun exception");
-	halt();
+	fail();
 }
 void ts_handler()
 {
 	cli();
 	printf("ts exception");
-	halt();
+	fail();
 }
 void np_handler()
 {
 	cli();
 	printf("np exception");
-	halt();
+	fail();
 }
 void ss_handler()
 {
 	cli();
 	printf("ss exception");
-	halt();
+	fail();
 }
 void gp_handler()
 {
 	cli();
 	printf("gp exception");
-	halt();
+	fail();
 }
 void pf_handler()
 {
 	cli();
 	printf("pf exception");
-	halt();
+	fail();
 }
 void mf_handler()
 {
 	cli();
 	printf("mf exception");
-	halt();
+	fail();
 }
 void ac_handler()
 {
 	cli();
 	printf("ac exception");
-	halt();
+	fail();
 }
 void mc_handler()
 {
 	cli();
 	printf("mc exception");
-	halt();
+	fail();
 }
 void xf_handler()
 {
 	cli();
 	printf("xf exception");
-	halt();
+	fail();
 }
 void generic_handler()
 {
 	cli();
 	printf("Unknown exception");
-	halt();
+	fail();
 }
 void pit_irq_handler()
 {
