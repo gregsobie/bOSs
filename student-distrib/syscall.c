@@ -3,6 +3,12 @@
 #include "paging.h"
 #include "x86_desc.h"
 #include "lib.h"
+#include "RTC.h"
+
+
+// struct file_operations dir_op __attribute__((unused)) = {dir_read, dir_write, dir_open, dir_close};
+// struct file_operations file_op __attribute__((unused)) = {file_read, file_write, file_open, file_close};
+// struct file_operations rtc_op __attribute__((unused)) = {RTC_read, RTC_write, RTC_open, RTC_close};
 
 asmlinkage int32_t execute (const uint8_t* command){
     asm volatile("cli");
@@ -133,15 +139,104 @@ asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 	printf("write\n");
 	return 0;
 }
-asmlinkage int32_t open (const uint8_t* filename){
+asmlinkage int32_t open (const uint8_t* filename)
+{
 	printf("open\n");
+
+	int i;
+	dentry_t* d;
+	uint32_t success;
+	PCB_t * current;
+	cur_pcb(current);
+	
+	success = read_dentry_by_name(filename, d);
+	
+	if (success == 0)
+	{
+		for (i=2;i<8;i++)
+		{
+			/*
+			set flags == 1 if that file descriptor is in use 
+			*/
+			if ( (PCB_t *)current->fd[i].flags == 0)
+			{
+				
+				//set the operations table, inode, flags?
+				//inode_t * node = (inode_t *)(&fs_base[d->inode+1]);
+				
+				
+				
+				if (d->type == 0)
+				{
+					 current->fd[i].f_op->read = RTC_read;
+					 current->fd[i].f_op->write =  RTC_write;
+					 current->fd[i].f_op->open =  RTC_open;
+					 current->fd[i].f_op->close =  RTC_close;
+					current->fd[i].f_inode = NULL;
+					current->fd[i].f_pos = 0;
+					current->fd[i].flags = 1;
+					//current->fd[i].f_op = &RTC_ops;
+					//fops_table[i] = RTC_ops;
+				}
+				
+				else if (d->type == 1)
+				{
+					current->fd[i].f_op->read = dir_read;
+					current->fd[i].f_op->write = dir_write;
+					current->fd[i].f_op->open = dir_open;
+					current->fd[i].f_op->close = dir_close;
+					current->fd[i].f_inode = NULL;
+					current->fd[i].f_pos = 0;
+					current->fd[i].flags = 1;
+					 //current->fd[i].f_op = fops_table[FILE_DAT_TYPE];
+					//fops_table[i] = dir_ops;
+				}
+				
+				else if (d->type == 2)
+				{
+					current->fd[i].f_op->read = file_read;
+					current->fd[i].f_op->write = file_write;
+					current->fd[i].f_op->open = file_open;
+					current->fd[i].f_op->close = file_close;
+					current->fd[i].f_inode = d->inode;
+					current->fd[i].f_pos = 0;
+					current->fd[i].flags = 1;
+					//current->fd[i].f_op = fops_table[FILE_DIR_TYPE];
+					//fops_table[i] = file_ops;
+				}
+
+				break;
+
+			}
+		}
+	
+	}
+	
+	else
+	{
+		return -1;
+	}
+
 	return 0;
+	
 }
 asmlinkage int32_t close (int32_t fd){
 	printf("close\n");
 	return 0;
 }
-asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes);
-asmlinkage int32_t vidmap (uint8_t** screen_start);
-asmlinkage int32_t set_handler (int32_t signum, void* handler_address);
-asmlinkage int32_t sigreturn (void);
+asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
+{
+	return 0;
+}
+asmlinkage int32_t vidmap (uint8_t** screen_start)
+{
+	return 0;
+}
+asmlinkage int32_t set_handler (int32_t signum, void* handler_address){
+
+return 0;
+}
+asmlinkage int32_t sigreturn (void){
+
+return 0;
+}
