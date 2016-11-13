@@ -1,4 +1,5 @@
 #include "RTC.h"
+#include "syscall.h"
 
 volatile int rtc_interrupt_occured;
 
@@ -57,7 +58,7 @@ void rtc_irq_handler()
 
 
 /* Sets up data to handle RTC device */
-int32_t RTC_open(const uint8_t* filename)
+int32_t RTC_open(struct file * fp)
 {
 	// Initializes RTC device
 	RTC_init();
@@ -65,7 +66,7 @@ int32_t RTC_open(const uint8_t* filename)
 }
 
 /* Reads data from RTC device */
-int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes)
+int32_t RTC_read(struct file * fp, char * buff, uint32_t nbytes)
 {
 	cli();
 	rtc_interrupt_occured = 0; 
@@ -81,14 +82,14 @@ int32_t RTC_read(int32_t fd, void* buf, int32_t nbytes)
 
 
 /* Sets passed in frequency/writes frequency to RTC */
-int32_t RTC_write(int32_t fd, const void* buf, int32_t nbytes)
+int32_t RTC_write(struct file * fp, const char * buff, uint32_t nbytes)
 {
 	// Checks if 4-byte integer is being passed in
 	if (nbytes == BYTE4)
 	{
 		unsigned char rate;
 		// Extracts frequency passed in
-		int32_t fq = *(int32_t*)buf;
+		int32_t fq = *(int32_t*)buff;
 		// Checks which rate should be set according to which frequency was passed in
 		// frequency = 32768 >> (rate-1)
 		if (fq == FREQ1)
@@ -149,7 +150,7 @@ int32_t RTC_write(int32_t fd, const void* buf, int32_t nbytes)
 }
 
 /* Closes RTC device and makes it available for later calls to open */
-int32_t RTC_close(int32_t fd)
+int32_t RTC_close(struct file * fp)
 {
 	return 0;
 }

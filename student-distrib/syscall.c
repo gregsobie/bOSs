@@ -116,8 +116,18 @@ asmlinkage int32_t halt (uint8_t status){
 }
 
 asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
+	PCB_t * pcb;
+	cur_pcb(pcb);
+	if (pcb->fd[fd].flags == 0 || fd >= 8 || fd < 0)
+	{
+		return -1;
+	}
+
+	struct file * fp = (struct file*) (&(pcb->fd[fd]));
+
 	printf("read\n");
-	return 0;
+	int32_t val = (fp->f_op->read(fp, buf, nbytes));
+	return val;
 }
 asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 	printf("write\n");
