@@ -10,7 +10,7 @@
 
 struct file;
 
-struct file_operations{
+typedef struct file_operations{
 	int32_t (*read) (struct file *, char *, uint32_t);
 	int32_t (*write) (struct file *, const char *, uint32_t);
 	int32_t (*open) (struct file *);
