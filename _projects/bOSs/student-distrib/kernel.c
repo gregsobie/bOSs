@@ -162,13 +162,13 @@ entry (unsigned long magic, unsigned long addr)
 	enable_irq(0);
 	enable_irq(2);
 
-	RTC_init();
+	//RTC_init();
 	
 	/* Test RTC write and read functions */
 	// RTC_open(NULL);
 	// int32_t inbuff[1] = {2};
-	// int temp = 2;
-	// RTC_write(temp,&inbuff,4);
+	// struct file* temp;
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// clear();
 	// int i=0;
 	// int x=0;
@@ -184,7 +184,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 4;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<6;i++)
 	// {
@@ -198,7 +198,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 8;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<8;i++)
 	// {
@@ -212,7 +212,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 16;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<16;i++)
 	// {
@@ -226,7 +226,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 32;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<32;i++)
 	// {
@@ -240,7 +240,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 64;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<64;i++)
 	// {
@@ -254,7 +254,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 128;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<128;i++)
 	// {
@@ -268,7 +268,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 256;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<256;i++)
 	// {
@@ -282,7 +282,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 512;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<512;i++)
 	// {
@@ -296,7 +296,7 @@ entry (unsigned long magic, unsigned long addr)
 	// }
 	// clear();
 	// inbuff[0] = 1024;
-	// RTC_write(temp,&inbuff,4);
+	// RTC_write(temp,(const char*)&inbuff,4);
 	// x = 0;
 	// for (i=0;i<1024;i++)
 	// {
@@ -334,12 +334,12 @@ entry (unsigned long magic, unsigned long addr)
 
 
 	//Test Filesystem info
-	/*
-	printf("\n");
-	clear();
-	printf("\n");
-	show_fs_info();
-	*/
+	
+	// printf("\n");
+	// clear();
+	// printf("\n");
+	// show_fs_info();
+	
 
 	//Test File read
 	// init_filesystem();
@@ -353,13 +353,13 @@ entry (unsigned long magic, unsigned long addr)
 	
 	
 	//Terminal Testing
-	/*
-	unsigned char inbuff[1024] = {0};
-	while(true){
-		terminal_read(0, inbuff, 391);
-		if(!strncmp(inbuff,"input",5))
-			terminal_write(0,"output\n",7);
-	} */
+	
+	// unsigned char inbuff[1024] = {0};
+	// while(true){
+	// 	terminal_read(0, inbuff, 391);
+	// 	if(!strncmp(inbuff,"input",5))
+	// 		terminal_write(0,"output",6);
+	// } 
 
 	/* Execute the first program (`shell') ... */
 
