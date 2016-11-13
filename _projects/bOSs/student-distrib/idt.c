@@ -6,7 +6,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "multiboot.h"
-
+#include "types.h"
 
 void initialize_idt()
 {
@@ -198,7 +198,10 @@ void gp_handler()
 void pf_handler()
 {
 	cli();
-	printf("pf exception");
+	uint32_t cr2;
+	uint32_t eec;
+	asm volatile("mov %%cr2,%0; popl %1":"=r"(cr2),"=r"(eec)::"memory");
+	printf("pf exception at %x, %x",cr2,eec);
 	fail();
 }
 void mf_handler()

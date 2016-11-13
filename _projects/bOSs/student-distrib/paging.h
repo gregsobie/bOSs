@@ -3,7 +3,8 @@
 
 #include "types.h"
 
-#define USER_PROG_LOCATION 0x08048000 
+#define USER_MEM_LOCATION  (128 * 0x00100000)
+#define USER_PROG_LOCATION (128 * 0x00100000) + 0x048000
 #define MAX_USER_PROG      0x06
 
 #define FLAG_PRESENT       0x01
