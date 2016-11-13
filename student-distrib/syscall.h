@@ -1,12 +1,12 @@
-#ifndef _SYSCALL_H
-#define _SYSCALL_H
+#ifndef SYSCALL_H
+#define SYSCALL_H
 
 #define asmlinkage __attribute__((regparm(0)))
 #define KERNEL_STACK_SIZE 0x2000 //8KB
-
+#define PCB_MASK 0xFFFFE000
 
 #include "types.h"
-
+#include "keyboard.h"
 
 struct file;
 
@@ -30,15 +30,15 @@ struct file_operations fops_table[8];
 static void * kernel_top = (void *) 0x800000; //8 MB
 
 typedef struct PCB{
+	uint8_t name[MAX_BUF_INDEX];
+	uint8_t args[MAX_BUF_INDEX];
 	uint32_t pid;
-	struct file fd[8];
 	uint32_t esp0;
-	uint32_t ebp0;
-	uint32_t PDE_num; // Mem mapping will require full PD
 	uint32_t esp;
 	uint32_t ebp;
+	struct file fd[8];	
+	struct PCB * parent;
 	//Register table
-
 } PCB_t;
 
 asmlinkage int32_t halt (uint8_t status);
@@ -51,5 +51,14 @@ asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes);
 asmlinkage int32_t vidmap (uint8_t** screen_start);
 asmlinkage int32_t set_handler (int32_t signum, void* handler_address);
 asmlinkage int32_t sigreturn (void);
+
+#define cur_pcb(addr)                   \
+do {                                    \
+	asm volatile("movl %%esp,%0      \n\
+			andl %1,%0"			\
+			: "=r" (addr)               \
+			: "i"(PCB_MASK)                          \
+			: "memory");   				\
+} while(0)
 
 #endif

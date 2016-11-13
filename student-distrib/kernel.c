@@ -12,6 +12,7 @@
 #include "paging.h"
 #include "keyboard.h"
 #include "filesystem.h"
+#include "syscall.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -363,7 +364,7 @@ entry (unsigned long magic, unsigned long addr)
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */
-
+	execute("hello");
 
 
 	asm volatile(".1: hlt; jmp .1;");
