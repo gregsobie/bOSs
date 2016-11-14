@@ -6,9 +6,17 @@
 #include "RTC.h"
 #include "keyboard.h"
 
+void check_i(){
+	uint32_t eflags;
+	asm volatile("pushfl      \n\
+			movl (%%esp),%0; 			\n\
+			addl $4,%%esp"
+			: "=r" (eflags):: "memory");   				
+	printf("%x\n",eflags & 0x200);
+}
+
 asmlinkage int32_t execute (const uint8_t* command){
     asm volatile("cli");
-	printf("exec\n");
 	//Obtain PID
 	int i;
 	uint32_t pid = -1;
@@ -36,11 +44,9 @@ asmlinkage int32_t execute (const uint8_t* command){
 	pcb->name[i] = '\0';
 	while(command[i] == ' ')i++;
 	uint32_t offset = i;
-	for(;i<=MAX_BUF_INDEX;i++){
+	for(;i<=MAX_BUF_INDEX && command[i] != '\0';i++){
 		pcb->args[i-offset] = command[i];
 	}
-	printf("%s   %s\n",pcb->name,pcb->args);
-
 	dentry_t d;
 	if(read_dentry_by_name (pcb->name, &d) == -1){
 		proc_id_used[pid] = false;
@@ -121,7 +127,6 @@ asmlinkage int32_t execute (const uint8_t* command){
 	return ret;
 }
 asmlinkage int32_t halt (uint8_t status){
-	printf("halt\n");
 	PCB_t * pcb;
 	cur_pcb(pcb);
 
@@ -137,9 +142,9 @@ asmlinkage int32_t halt (uint8_t status){
 	for (i=0;i<8;i++){
 		close(i);
 	}
+	proc_id_used[pcb->pid] = false;
 	//change esp/ebp
 	if(pcb->pid == 0){
-		proc_id_used[0] = false;
 		execute((uint8_t *)"shell");
 	}
 	asm volatile("\
@@ -147,7 +152,7 @@ asmlinkage int32_t halt (uint8_t status){
 		movl	%0,%%esp 	\n\
 		movl    %1,%%ebp"	
 		:
-		: "r"(pcb->parent->esp),"r"(pcb->parent->ebp),"r"((uint32_t)status)
+		: "r"(pcb->esp),"r"(pcb->ebp),"r"((uint32_t)status)
 		: "memory" );
 
 	asm volatile("jmp halt_ret_label");
@@ -167,6 +172,7 @@ asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
 	return val;
 }
 asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
+
 	PCB_t* pcb;
 	cur_pcb(pcb);
 	if (pcb->fd[fd].flags==0 || buf==NULL || fd > 7 || fd < 0)
@@ -277,7 +283,7 @@ asmlinkage int32_t close (int32_t fd){
 	if(current->fd[fd].flags == 0){
 		return -1;
 	}
-	current->fd[fd].f_op->close(&(current->fd[fd]));
+	int32_t ret = current->fd[fd].f_op->close(&(current->fd[fd]));
 
 	current->fd[fd].f_inode = NULL;
 	current->fd[fd].f_pos = NULL;
@@ -288,7 +294,7 @@ asmlinkage int32_t close (int32_t fd){
 	//struct file* fp=(struct file*) (&(current->fd[fd]));
 
 
-	return current->fd[fd].f_op->close((&(current->fd[fd])));
+	return ret;
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 {
@@ -312,8 +318,7 @@ asmlinkage int32_t vidmap (uint8_t** screen_start)
 	return 0;
 }
 asmlinkage int32_t set_handler (int32_t signum, void* handler_address){
-
-return 0;
+	return 0;
 }
 asmlinkage int32_t sigreturn (void){
 

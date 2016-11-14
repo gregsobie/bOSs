@@ -261,6 +261,7 @@ int32_t terminal_read(struct file * f, char * buf, uint32_t nbytes){
 		return -1;
 	/* Wait until enter key has been pressed */
 	while(typingLine);
+	printf("%s",line_buffer);
 	/* Any key pressed after enter should be
 	 * a part of the next line */
 	typingLine = true;
