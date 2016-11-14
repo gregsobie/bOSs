@@ -22,6 +22,7 @@ struct file{
 	uint32_t f_inode;
 	uint32_t f_pos;
 	uint32_t flags;
+	uint32_t fd_index;
 };
 
 struct file_operations fops_table[8];

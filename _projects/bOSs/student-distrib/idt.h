@@ -9,6 +9,7 @@
 #include "multiboot.h"
 
 
+
 extern void initialize_idt();
 
 extern void de_handler();
