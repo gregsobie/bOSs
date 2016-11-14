@@ -39,6 +39,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	for(;i<=MAX_BUF_INDEX;i++){
 		pcb->args[i-offset] = command[i];
 	}
+	printf("%s   %s\n",pcb->name,pcb->args);
 
 	dentry_t d;
 	if(read_dentry_by_name (pcb->name, &d) == -1){
@@ -139,7 +140,7 @@ asmlinkage int32_t halt (uint8_t status){
 	//change esp/ebp
 	if(pcb->pid == 0){
 		proc_id_used[0] = false;
-		execute("shell");
+		execute((uint8_t *)"shell");
 	}
 	asm volatile("\
 		movl 	%2,%%eax	\n\
@@ -291,17 +292,20 @@ asmlinkage int32_t close (int32_t fd){
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 {
-	if(nbytes > LINE_BUF_SIZE)
-		nbytes = LINE_BUF_SIZE;
 	PCB_t * current;
 	cur_pcb(current);
+	if(strlen((int8_t *)current->args) > nbytes)
+		return -1;
+	if(nbytes > LINE_BUF_SIZE)
+		nbytes = LINE_BUF_SIZE;
+
 	int i;
 	for(i=0;i<nbytes;i++){
 		buf[i] = current->args[i];
 		if(current->args[i] == '\0')
 			break;
 	}
-	return i;
+	return 0;
 }
 asmlinkage int32_t vidmap (uint8_t** screen_start)
 {
