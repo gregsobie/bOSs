@@ -38,6 +38,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	if(pcb->pid == 0)
 		pcb->parent = pcb;
 	//Parse args
+	//printf("%s",command);
 	for(i=0;i<=MAX_BUF_INDEX && command[i] != ' '&& command[i] != '\0';i++){
 		pcb->name[i] = command[i];
 	}
