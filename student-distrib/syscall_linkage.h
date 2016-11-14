@@ -28,8 +28,6 @@ systemcall_linkage:\n\
 \n\
 	call *syscall_jumptable(,%eax,4);\n\
 \n\
-	addl $12, %esp ;\n\
-\n\
 	popl %ebx;\n\
 	popl %ecx;\n\
 	popl %edx;\n\
