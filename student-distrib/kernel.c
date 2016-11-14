@@ -157,6 +157,7 @@ entry (unsigned long magic, unsigned long addr)
 	/* Init the PIC */
 
 	initialize_idt();
+
 	lidt(idt_desc_ptr);
 	i8259_init();
 	enable_irq(0);
@@ -367,9 +368,10 @@ entry (unsigned long magic, unsigned long addr)
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */
-	//execute("hello");
 
-
+	execute("shell");
 	asm volatile(".1: hlt; jmp .1;");
+
+
 }
 

@@ -7,7 +7,7 @@
 #include "debug.h"
 #include "multiboot.h"
 #include "types.h"
-#include "syscall_linkage.S"
+#include "syscall_linkage.h"
 
 void initialize_idt()
 {
@@ -96,16 +96,8 @@ void initialize_idt()
 	SET_IDT_ENTRY(idt[33],&key_irq_handler);
 	SET_IDT_ENTRY(idt[40],&rtc_irq_handler);
 	
-	SET_IDT_ENTRY(idt[128],systemcall_linkage);
-
-	
-
-
-
-
-	
-	
-
+	SET_IDT_ENTRY(idt[128],&systemcall_linkage);
+	idt[128].dpl = 3;
 }
 void fail(){
 	//When we implement program execution, we will need to extend/move this
