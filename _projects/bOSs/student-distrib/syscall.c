@@ -246,20 +246,16 @@ asmlinkage int32_t open (const uint8_t* filename)
 				}
 				current->fd[i].fd_index = i;
 				//current->fd[i].f_op->open(&(current->fd[i]));
-				struct file* fp=(struct file*) (&(current->fd[i]));
+				//struct file* fp=(struct file*) (&(current->fd[i]));
 				
-				return fp->fd[i]->f_op->open(fp);
+				return current->fd[i].f_op->open((&(current->fd[i])));
 
 
 			}
 		}
 	
 	}
-	
-	else
-	{
-		return -1;
-	}
+	return -1;
 
 
 	
@@ -286,10 +282,10 @@ asmlinkage int32_t close (int32_t fd){
 	current->fd[fd].flags = NULL;
 	current->fd[fd].fd_index = NULL;
 
-	struct file* fp=(struct file*) (&(current->fd[fd]));
+	//struct file* fp=(struct file*) (&(current->fd[fd]));
 
 
-	return fp->fd[i]->f_op->close(fp);
+	return current->fd[fd].f_op->close((&(current->fd[fd])));
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 {

@@ -1,10 +1,6 @@
 #include "filesystem.h"
 #include "lib.h"
 #include "types.h"
-#include "idt.h"
-#include "syscall.h"
-
-
 /*
 	Initializes the file ops pointers for this driver
 */

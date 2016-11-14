@@ -10,7 +10,6 @@
 #define KERNEL_TOP	0x00800000
 
 #include "types.h"
-#include "filesystem.h"
 #include "keyboard.h"
 
 //struct file_operations fops_table[8];
