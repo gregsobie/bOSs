@@ -155,7 +155,6 @@ uint8_t caps_lock_and_shift[128] =  {
  			/* Else move current entry to next row */
  			}else
 			 	move_csr(0,getY()+1);
-			line_buffer_index=0;	
 		/* Deletes the last typed character and updates the
 		 * line input buffer to reflect element's absense */
  		}else if(keyboard_scancode == KEYBOARD_BACKSPACE){
@@ -272,6 +271,9 @@ int32_t terminal_read(struct file * f, char * buf, uint32_t nbytes){
 		terminal_buffer[i] = line_buffer[i];
 	}
 	/* Reset input line buffer index */
+	for(i=0; i<nbytes; i++){
+		line_buffer[i] = '\0';
+	}
  	line_buffer_index=0;
 	return (strlen((int8_t*)terminal_buffer));
 }
@@ -293,6 +295,8 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 	/* Write to screen and update cursor */
 	cli();
 	for(i=0; i<nbytes; i++){
+		if(terminal_buffer[i] == '\0')
+			break;
 		putc(terminal_buffer[i]);
 		bytes_written++;
 	}

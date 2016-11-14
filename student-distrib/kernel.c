@@ -353,17 +353,21 @@ entry (unsigned long magic, unsigned long addr)
 	
 	
 	//Terminal Testing
-	/*
-	 unsigned char inbuff[1024] = {0};
-	 while(true){
-	 	terminal_read(0, inbuff, 391);
-	 	if(!strncmp(inbuff,"i",5))
-	 		terminal_write(0,inbuff,5);
+	
+	/* unsigned char inbuff[1024] = {0};
+	int i; 
+	while(true){
+	 	terminal_read(NULL, inbuff, 391);
+	 	if(strncmp(inbuff,"i",5))
+	 		terminal_write(NULL,inbuff,strlen((int8_t*)inbuff));
+	 	for(i=0;i<1024;i++){
+	 		inbuff[i] == '\0';
+	 	}
 	} */
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */
-	execute("hello");
+	//execute("hello");
 
 
 	asm volatile(".1: hlt; jmp .1;");
