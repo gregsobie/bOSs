@@ -48,7 +48,9 @@ uint8_t caps_lock_and_shift[128] =  {
 /* Prepares driver for use */
  void keyboard_install (int irq){
  	/* Set shift, ctrl, and alt keys */
- 	left_shift = right_shift = alt = ctrl = typingLine = false;
+ 	left_shift = right_shift = alt = ctrl = false;
+
+ 	typingLine = true;
  	line_buffer_index=0;
  	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
