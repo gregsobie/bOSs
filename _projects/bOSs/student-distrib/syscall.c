@@ -6,10 +6,6 @@
 #include "RTC.h"
 #include "keyboard.h"
 
-// struct file_operations dir_op __attribute__((unused)) = {dir_read, dir_write, dir_open, dir_close};
-// struct file_operations file_op __attribute__((unused)) = {file_read, file_write, file_open, file_close};
-// struct file_operations rtc_op __attribute__((unused)) = {RTC_read, RTC_write, RTC_open, RTC_close};
-
 asmlinkage int32_t execute (const uint8_t* command){
     asm volatile("cli");
 	printf("exec\n");
@@ -27,7 +23,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 		printf("Max processes used.");
 		return -1;
 	}
-	PCB_t * pcb = (PCB_t *)(0x800000-0x2000 * (pid+1));
+	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB4 * (pid+1));
 	pcb->pid = pid;
 	pcb->esp0 = tss.esp0;
 
@@ -49,9 +45,8 @@ asmlinkage int32_t execute (const uint8_t* command){
 	}
 	uint8_t head[40];
 	read_data (d.inode, 0, head, 40);
-	if(head[0] != 0x7f || head[1] != 0x45 || head[2] != 0x4c || head[3] != 0x46){
+	if(head[0] != ELF_MAGIC_0 || head[1] != 'E' || head[2] != 'L' || head[3] != 'F'){
 		proc_id_used[pid] = false;
-
 		return -1;
 	}
 	//Convert EIP from little endian to big endian
@@ -61,13 +56,13 @@ asmlinkage int32_t execute (const uint8_t* command){
 
 	//Change paging
 	proc_page_directory[pid][0] =  (uint32_t)video_page_table | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-	proc_page_directory[pid][1] = 0x00400000 | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_GLOBAL;
-	proc_page_directory[pid][USER_PROG_LOCATION >> 22] = (0x00400000 * (pid+2)) | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT |FLAG_USER;
+	proc_page_directory[pid][1] = MB4 | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_GLOBAL;
+	proc_page_directory[pid][USER_PROG_LOCATION >> 22] = (KERNEL_TOP + MB4 * pid) | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT |FLAG_USER;
 
 	loadPageDirectory(proc_page_directory[pid]);
 
 	//Load program into program area
-	read_data (d.inode, 0, (uint8_t *)(USER_PROG_LOCATION), 0x400000); //Copy up to 4MB of program data (stack will kill some of it)
+	read_data (d.inode, 0, (uint8_t *)(USER_PROG_LOCATION), MB4); //Copy up to 4MB of program data (stack will kill some of it)
 	//Create PCB
 	
 
@@ -81,7 +76,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 		: "=r"(pcb->esp), "=r"(pcb->ebp), "=r"(pcb->ss0)
 		: 
 		:"memory");
-	uint32_t u_esp = USER_MEM_LOCATION + 0x00400000 -4 ;
+	uint32_t u_esp = USER_MEM_LOCATION + MB4 -4 ;
 	//init file ops
 	
 	pcb->fd[0].f_op = &terminal_ops;
@@ -89,9 +84,9 @@ asmlinkage int32_t execute (const uint8_t* command){
 	pcb->fd[1].f_op = &terminal_ops;
 	pcb->fd[1].flags =1;
 	//
-	printf("%x %x %x\n",eip, (0x00400000 * (pid+2)), u_esp);
+	printf("%x %x %x\n",eip, (MB4 * (pid+2)), u_esp);
 	//Change TSS
-	tss.esp0 = 0x800000-0x2000 * pid -4;//address of new kernel stack
+	tss.esp0 = KERNEL_TOP-KB4 * pid -4;//address of new kernel stack
 	tss.ss0 = KERNEL_DS;
 	//set up fake table thingy on stack
 	printf("9\n");
