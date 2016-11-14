@@ -353,14 +353,13 @@ entry (unsigned long magic, unsigned long addr)
 	
 	
 	//Terminal Testing
-	
-	// unsigned char inbuff[1024] = {0};
-	// while(true){
-	// 	terminal_read(0, inbuff, 391);
-	// 	if(!strncmp(inbuff,"input",5))
-	// 		terminal_write(0,"output",6);
-	// } 
-
+	/*
+	 unsigned char inbuff[1024] = {0};
+	 while(true){
+	 	terminal_read(0, inbuff, 391);
+	 	if(!strncmp(inbuff,"i",5))
+	 		terminal_write(0,inbuff,5);
+	} */
 	/* Execute the first program (`shell') ... */
 
 	/* Spin (nicely, so we don't chew up cycles) */

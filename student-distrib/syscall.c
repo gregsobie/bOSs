@@ -137,6 +137,15 @@ asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
 }
 asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 	printf("write\n");
+	PCB_t* pcb;
+	cur_pcb(pcb);
+	if (pcb->fd[fd].flags==0 || buf==NULL || fd > 7 || fd < 0)
+		return -1;
+
+	struct file* fp=(struct file*) (&(pcb->fd[fd]));
+
+	int32_t val=(fp->f_op->write(fp, buf, nbytes));
+	return val;
 	return 0;
 }
 asmlinkage int32_t open (const uint8_t* filename)

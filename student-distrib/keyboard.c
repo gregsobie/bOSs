@@ -268,7 +268,7 @@ int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
 	if(nbytes > line_buffer_index+1)
 		nbytes = line_buffer_index+1;
 	/* Copy from line_buffer into terminal_buffer */
-	int i;
+	int32_t i;
 	for(i=0; i<nbytes; i++){
 		terminal_buffer[i] = line_buffer[i];
 	}
