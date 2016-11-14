@@ -204,6 +204,7 @@ asmlinkage int32_t open (const uint8_t* filename)
 					//current->fd[i].f_op = fops_table[FILE_DIR_TYPE];
 					//fops_table[i] = file_ops;
 				}
+				current->fd[i].fd_index = i;
 
 				break;
 
@@ -221,7 +222,25 @@ asmlinkage int32_t open (const uint8_t* filename)
 	
 }
 asmlinkage int32_t close (int32_t fd){
+	
 	printf("close\n");
+	
+	PCB_t * current;
+	cur_pcb(current);
+
+	if (fd > 7 || fd < 2)
+	{
+		return -1;
+	}
+	
+	current->fd[fd].f_inode = NULL;
+	current->fd[fd].f_pos = NULL;
+	current->fd[fd].f_op = NULL;
+	current->fd[fd].flags = NULL;
+	current->fd[fd].fd_index = NULL;
+
+
+
 	return 0;
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)

@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "multiboot.h"
 #include "types.h"
+#include "syscall_linkage.S"
 
 void initialize_idt()
 {
@@ -94,6 +95,7 @@ void initialize_idt()
 	SET_IDT_ENTRY(idt[32],&pit_irq_handler);
 	SET_IDT_ENTRY(idt[33],&key_irq_handler);
 	SET_IDT_ENTRY(idt[40],&rtc_irq_handler);
+	//userSET_IDT_ENTRY(idt[128],systemcall_linkage);
 
 	
 
