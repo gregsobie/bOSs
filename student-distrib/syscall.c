@@ -172,27 +172,40 @@ asmlinkage int32_t halt (uint8_t status){
 	return 0;
 }
 
+/*
+* int32_t read(fd, buf, nbytes);
+*   Inputs: fd, buf, nbytes
+*   Return Value: Return value of callee function
+*	Function: Goes to specified read function
+*/
 asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
 	PCB_t * pcb;
-	cur_pcb(pcb);
+	cur_pcb(pcb); // Retrieve updated PCB
+	// Check if there are valid values
 	if (pcb->fd[fd].flags == 0 || fd >= 8 || fd < 0)
 	{
 		return -1;
 	}
-
-	//struct file * fp = (struct file*) (&(pcb->fd[fd]));
+	// Return specified read function return value
 	int32_t val = (pcb->fd[fd].f_op->read(&(pcb->fd[fd]), buf, nbytes));
 	return val;
 }
-asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 
+/*
+* int32_t write(fd, buf, nbytes);
+*   Inputs: fd, buf, nbytes
+*   Return Value: Return value of callee function
+*	Function: Goes to specified write function
+*/
+asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 	PCB_t* pcb;
-	cur_pcb(pcb);
+	cur_pcb(pcb); // Retrieve updated PCB
+	// Check if there are valid values
 	if (pcb->fd[fd].flags==0 || buf==NULL || fd > 7 || fd < 0)
 		return -1;
 
 	struct file* fp=(struct file*) (&(pcb->fd[fd]));
-
+	// Return specified read function return value
 	int32_t val=(fp->f_op->write(fp, buf, nbytes));
 	return val;
 }
