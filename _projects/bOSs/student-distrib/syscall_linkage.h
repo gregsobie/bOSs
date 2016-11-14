@@ -13,7 +13,6 @@ asm("\n\
 systemcall_linkage:\n\
 \n\
 \n\
-sti\n\
 	cmpl $1, %eax;\n\
 	jl bad;\n\
 	cmpl $10, %eax;\n\

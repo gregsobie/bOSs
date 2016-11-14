@@ -97,7 +97,15 @@ void initialize_idt()
 	SET_IDT_ENTRY(idt[40],&rtc_irq_handler);
 	
 	SET_IDT_ENTRY(idt[128],&systemcall_linkage);
+	idt[128].present=1;
+	idt[128].seg_selector = KERNEL_CS;
 	idt[128].dpl = 3;
+	idt[128].reserved4=0;
+	idt[128].reserved3=1;
+	idt[128].reserved2=1;
+	idt[128].reserved1=1;
+	idt[128].size=1;
+	idt[128].reserved0=0;
 }
 void fail(){
 	//When we implement program execution, we will need to extend/move this
