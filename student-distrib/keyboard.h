@@ -6,6 +6,7 @@
 #define _KEYBOARD_H
 
 #include "types.h"
+#include "filesystem.h"
 
 /* IO ports for each keyboard controller */
 #define KEYBOARD_ENCODER_IN_BUF	 0x60
@@ -47,6 +48,7 @@
  #define MAX_COL_INDEX 	79
  #define MAX_ROW_INDEX 	24
  #define MAX_BUF_INDEX 	127
+ #define LINE_BUF_SIZE	128
  #define BYTE_PER_CHAR 	1
  #define MASK_BIT_2 	4
  #define MASK_BIT_1 	2
@@ -55,7 +57,7 @@
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
 extern uint8_t _lastScanCode;
-uint8_t line_buffer[128];
+char line_buffer[128];
 volatile int line_buffer_index;
 
 /* Prepares driver for use */
@@ -80,15 +82,22 @@ void keyboard_set_leds(bool numlock, bool scrolllock, bool capslock);
 extern void key_irq_handler();
 
 /* Opens the terminal driver */
-int32_t terminal_open(const uint8_t* filename);
+int32_t terminal_open(struct file *);
 
 /* Closes the terminal driver */
-int32_t terminal_close(int32_t fd);
+int32_t terminal_close(struct file *);
 
 /* Reads input from keyboard (128-char line) */
-int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes);
+int32_t terminal_read(struct file * f , char * buf, uint32_t nbytes);
 
 /* Write input to screen (characters pressed) */
-int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
+int32_t terminal_write(struct file * f, const char * buf, uint32_t nbytes);
+
+static struct file_operations terminal_ops __attribute__((unused)) = {
+	.read = terminal_read,
+	.write = terminal_write,
+	.open = terminal_open,
+	.close = terminal_close
+};
 
 #endif

@@ -46,4 +46,11 @@ extern int32_t RTC_open(struct file *);
 extern int32_t RTC_write(struct file *, const char *, uint32_t);
 extern int32_t RTC_close(struct file *);
 
+static struct file_operations RTC_ops __attribute__((unused)) = {
+	.read = RTC_read,
+	.write = RTC_write,
+	.open = RTC_open,
+	.close = RTC_close
+};
+
 #endif

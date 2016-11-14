@@ -123,7 +123,6 @@ uint8_t caps_lock_and_shift[128] =  {
  	uint8_t keyboard_scancode;
  	uint8_t keyboard_character;
  	uint8_t keyboard_data;
- 	uint32_t fd=0;
  	/* MSB denotes whether key is pressed, bits 0-6 denote the make code */
  	keyboard_data = inb(KEYBOARD_ENCODER_IN_BUF);
  	keyboard_scancode = keyboard_data & KEY_STATE_MASK;
@@ -191,7 +190,7 @@ uint8_t caps_lock_and_shift[128] =  {
 			 	}
 			 	/* Store character to input line buffer and echo to terminal */
 			 	line_buffer[line_buffer_index] = keyboard_character;
-			 	terminal_write(fd, line_buffer + line_buffer_index, BYTE_PER_CHAR);
+			 	terminal_write(NULL, line_buffer + line_buffer_index, BYTE_PER_CHAR);
 			 	/* If X is at max column and Y is at max row,
 			 	 * shift all elements upward by one row */
 			 	if(getX() == MAX_COL_INDEX && getY()==MAX_ROW_INDEX)
@@ -229,7 +228,7 @@ System call for open of file type = terminal
 
 */
 
-int32_t terminal_open(const uint8_t* filename){
+int32_t terminal_open(struct file * f){
 	return 0;
 }
 
@@ -241,7 +240,7 @@ System call for close of file type = terminal
 
 */
 
-int32_t terminal_close(int32_t fd){
+int32_t terminal_close(struct file * f){
 	return 0;
 }
 
@@ -255,7 +254,7 @@ takes buffer passed in, and copies from line_buffer into the terminal buffer
 */
 
 
-int32_t terminal_read(int32_t fd, unsigned char* buf, int32_t nbytes){
+int32_t terminal_read(struct file * f, char * buf, uint32_t nbytes){
 	char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 		return -1;
@@ -285,7 +284,7 @@ OUTPUTS: return amount of bytes written
 takes buffer passed in, and outputs to terminal and update cursor 
 
 */
-int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
+int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
