@@ -369,7 +369,7 @@ entry (unsigned long magic, unsigned long addr)
 
 	/* Spin (nicely, so we don't chew up cycles) */
 
-	execute("ls .");
+	execute("cat frame0.txt");
 	asm volatile(".1: hlt; jmp .1;");
 
 

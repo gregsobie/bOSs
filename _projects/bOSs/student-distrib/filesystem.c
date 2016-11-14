@@ -38,9 +38,16 @@ int32_t dir_read (struct file * fp, char * outbuff, uint32_t bytes){
 		bytes = FILE_NAME_LEN;
 	if(fp->f_pos/DENTRY_SIZE > fs_base->num_entries)
 		return 0;//Return 0 if no remaining files.
-	strncpy(outbuff,((char *)fs_base) + fp->f_pos,bytes);
+	char * name = (char *)fs_base + fp->f_pos;
+	int32_t i = 0;
+	while(true){
+		if(i >= bytes || name[i] == '\0')
+			break;
+		outbuff[i] = name[i];
+		i++;
+	}
 	fp->f_pos += DENTRY_SIZE;
-	return bytes;
+	return i;
 }
 int32_t dir_write (struct file * fp, const char * inbuff, uint32_t bytes){
 	return -1;
