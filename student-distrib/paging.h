@@ -5,7 +5,7 @@
 
 #define USER_MEM_LOCATION  (128 * 0x00100000)
 #define USER_PROG_LOCATION ((128 * 0x00100000) + 0x048000)
-#define MAX_USER_PROG      0x06
+#define MAX_USER_PROG      0x02
 
 #define FLAG_PRESENT       0x01
 #define FLAG_WRITE_ENABLE  0x02
@@ -26,7 +26,7 @@ void init_kernel_pd();
 uint32_t kernel_page_directory[1024] __attribute__((aligned(4096)));
 uint32_t video_page_table[1024] __attribute__((aligned(4096)));
 uint32_t proc_page_directory[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
-static  uint8_t proc_id_used[MAX_USER_PROG] = {false};
+static  uint8_t proc_id_used[MAX_USER_PROG] __attribute__((unused)) = {false};
 
 
 #endif
