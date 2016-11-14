@@ -9,8 +9,8 @@
 	Initializes the file ops pointers for this driver
 */
 void init_filesystem(){
-	fops_table[FILE_DIR_TYPE] = dir_ops;
-	fops_table[FILE_DAT_TYPE] = file_ops;
+	// fops_table[FILE_DIR_TYPE] = dir_ops;
+	// fops_table[FILE_DAT_TYPE] = file_ops;
 }
 
 /*
@@ -78,9 +78,9 @@ int32_t test_read(const uint8_t* filename, const void* buf, int32_t nbytes){
 	if(dentry.type == FILE_RTC_TYPE){
 		return -1;
 	}else if(dentry.type == FILE_DIR_TYPE){
-		f.f_op = &fops_table[FILE_DIR_TYPE];
+		f.f_op = &dir_ops;
 	}else if(dentry.type == FILE_DAT_TYPE){
-		f.f_op = &fops_table[FILE_DAT_TYPE];
+		f.f_op = &file_ops;
 	}
 	printf("File name: %s \n",(char *)filename);
 	ret = f.f_op->open(&f);

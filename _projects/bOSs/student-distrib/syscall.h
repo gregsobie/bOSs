@@ -6,35 +6,18 @@
 #define PCB_MASK 0xFFFFE000
 
 #include "types.h"
+#include "filesystem.h"
 #include "keyboard.h"
 
-struct file;
+//struct file_operations fops_table[8];
 
-typedef struct file_operations{
-	int32_t (*read) (struct file *, char *, uint32_t);
-	int32_t (*write) (struct file *, const char *, uint32_t);
-	int32_t (*open) (struct file *);
-	int32_t (*close) (struct file *);
-} file_operations_t;
-
-struct file{
-	struct file_operations * f_op;
-	uint32_t f_inode;
-	uint32_t f_pos;
-	uint32_t flags;
-	uint32_t fd_index;
-};
-
-struct file_operations fops_table[8];
-
-
-static void * kernel_top = (void *) 0x800000; //8 MB
 
 typedef struct PCB{
-	uint8_t name[MAX_BUF_INDEX];
-	uint8_t args[MAX_BUF_INDEX];
+	uint8_t name[MAX_BUF_INDEX+1];
+	uint8_t args[MAX_BUF_INDEX+1];
 	uint32_t pid;
 	uint32_t esp0;
+	uint32_t ss0;
 	uint32_t esp;
 	uint32_t ebp;
 	struct file fd[8];	

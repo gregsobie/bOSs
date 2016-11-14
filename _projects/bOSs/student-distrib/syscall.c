@@ -4,7 +4,7 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "RTC.h"
-
+#include "keyboard.h"
 
 // struct file_operations dir_op __attribute__((unused)) = {dir_read, dir_write, dir_open, dir_close};
 // struct file_operations file_op __attribute__((unused)) = {file_read, file_write, file_open, file_close};
@@ -13,20 +13,6 @@
 asmlinkage int32_t execute (const uint8_t* command){
     asm volatile("cli");
 	printf("exec\n");
-
-	//Parse args
-	dentry_t d;
-	if(read_dentry_by_name (command, &d) == -1)
-		return -1;
-	uint8_t head[40];
-	read_data (d.inode, 0, head, 40);
-	if(head[0] != 0x7f || head[1] != 0x45 || head[2] != 0x4c || head[3] != 0x46){
-		return -1;
-	}
-	//Convert EIP from little endian to big endian
-	//Could use x86 bswap %reg
-	uint32_t eip = (head[27] << 24) | (head[26] << 16) | (head[25] << 8) | head[24];
-	//obtain perm level from flags register?
 	//Obtain PID
 	int i;
 	uint32_t pid = -1;
@@ -41,6 +27,37 @@ asmlinkage int32_t execute (const uint8_t* command){
 		printf("Max processes used.");
 		return -1;
 	}
+	PCB_t * pcb = (PCB_t *)(0x800000-0x2000 * (pid+1));
+	pcb->pid = pid;
+	pcb->esp0 = tss.esp0;
+
+	//Parse args
+	for(i=0;i<=MAX_BUF_INDEX && command[i] != ' '&& command[i] != '\0';i++){
+		pcb->name[i] = command[i];
+	}
+	pcb->name[i] = '\0';
+	while(command[i] == ' ')i++;
+	uint32_t offset = i;
+	for(;i<=MAX_BUF_INDEX;i++){
+		pcb->args[i-offset] = command[i];
+	}
+
+	dentry_t d;
+	if(read_dentry_by_name (pcb->name, &d) == -1){
+		proc_id_used[pid] = false;
+		return -1;
+	}
+	uint8_t head[40];
+	read_data (d.inode, 0, head, 40);
+	if(head[0] != 0x7f || head[1] != 0x45 || head[2] != 0x4c || head[3] != 0x46){
+		proc_id_used[pid] = false;
+
+		return -1;
+	}
+	//Convert EIP from little endian to big endian
+	//Could use x86 bswap %reg
+	uint32_t eip = (head[27] << 24) | (head[26] << 16) | (head[25] << 8) | head[24];
+	//obtain perm level from flags register?
 
 	//Change paging
 	proc_page_directory[pid][0] =  (uint32_t)video_page_table | FLAG_WRITE_ENABLE | FLAG_PRESENT;
@@ -52,23 +69,25 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//Load program into program area
 	read_data (d.inode, 0, (uint8_t *)(USER_PROG_LOCATION), 0x400000); //Copy up to 4MB of program data (stack will kill some of it)
 	//Create PCB
-	printf("1\n");
-	PCB_t * pcb = (PCB_t *)(0x800000-0x2000 * (pid+1));
-	pcb->pid = pid;
-	pcb->esp0 = tss.esp0; //Bottom of stack
+	
 
 	PCB_t * parent;
 	cur_pcb(parent);
 	pcb->parent = parent;
 	asm volatile("\
+		movl	%%ss,%2		\n\
 		movl	%%esp,%0 	\n\
 		movl    %%ebp, %1"
-		: "=r"(parent->esp), "=r"(parent->ebp)
+		: "=r"(pcb->esp), "=r"(pcb->ebp), "=r"(pcb->ss0)
 		: 
 		:"memory");
 	uint32_t u_esp = USER_MEM_LOCATION + 0x00400000 -4 ;
-	//init 
-	//pcb.fd[0].file_operations = 
+	//init file ops
+	
+	pcb->fd[0].f_op = &terminal_ops;
+	pcb->fd[0].flags =1;
+	pcb->fd[1].f_op = &terminal_ops;
+	pcb->fd[1].flags =1;
 	//
 	printf("%x %x %x\n",eip, (0x00400000 * (pid+2)), u_esp);
 	//Change TSS
@@ -91,12 +110,15 @@ asmlinkage int32_t execute (const uint8_t* command){
 		pushl	%3		\n\
 		pushl	%0				\n\
 		iret	\n\
+		.globl halt_ret_label	\n\
 		halt_ret_label:"
 		:
 		: "r"(eip),"r"(u_esp),"i"(USER_DS),"i"(USER_CS)
 		: "eax");
-	//
-	return 0;
+	uint32_t ret;
+	asm volatile("movl %%eax, %0":"=r" (ret));
+
+	return ret;
 }
 asmlinkage int32_t halt (uint8_t status){
 	printf("halt\n");
@@ -104,21 +126,29 @@ asmlinkage int32_t halt (uint8_t status){
 	cur_pcb(pcb);
 
 	//Change paging back
+
 	//Security-shuld clean old memory space
 	loadPageDirectory(proc_page_directory[pcb->parent->pid]);
 	//Change TSS
-	//change esp/ebp
+	tss.esp0 = pcb->parent->esp0;
+	tss.ss0 = pcb->parent->ss0;
 	//close any FDs that need it
-	//jump to halt_ret_label in exec
-	
-	/*asm volatile("\
+	int i = 0;
+	for (i=0;i<8;i++){
+		close(i);
+	}
+	//change esp/ebp
+
+	asm volatile("\
+		movl 	%2,%%eax	\n\
 		movl	%0,%%esp 	\n\
-		movl    %1,%%ebp,"	
+		movl    %1,%%ebp"	
 		:
-		: "r"(pcb->parent->esp),"r"(pcb->parent->ebp) 
-		: "memory" );*/
-	//goto halt_ret_label;
-	return 0;
+		: "r"(pcb->parent->esp),"r"(pcb->parent->ebp),"r"((uint32_t)status)
+		: "memory" );
+	asm volatile("jmp halt_ret_label");
+
+	return status;
 }
 
 asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
@@ -177,44 +207,46 @@ asmlinkage int32_t open (const uint8_t* filename)
 				
 				if (d->type == 0)
 				{
-					 current->fd[i].f_op->read = RTC_read;
-					 current->fd[i].f_op->write =  RTC_write;
-					 current->fd[i].f_op->open =  RTC_open;
-					 current->fd[i].f_op->close =  RTC_close;
+					// current->fd[i].f_op->read = RTC_read;
+					// current->fd[i].f_op->write =  RTC_write;
+					// current->fd[i].f_op->open =  RTC_open;
+					// current->fd[i].f_op->close =  RTC_close;
 					current->fd[i].f_inode = NULL;
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1;
-					//current->fd[i].f_op = &RTC_ops;
+					current->fd[i].f_op = &RTC_ops;
 					//fops_table[i] = RTC_ops;
 				}
 				
 				else if (d->type == 1)
 				{
-					current->fd[i].f_op->read = dir_read;
-					current->fd[i].f_op->write = dir_write;
-					current->fd[i].f_op->open = dir_open;
-					current->fd[i].f_op->close = dir_close;
-					current->fd[i].f_inode = NULL;
+					// current->fd[i].f_op->read = dir_read;
+					// current->fd[i].f_op->write = dir_write;
+					// current->fd[i].f_op->open = dir_open;
+					// current->fd[i].f_op->close = dir_close;
+					current->fd[i].f_inode = d->inode;
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1;
+					current->fd[i].f_op = &dir_ops;
 					 //current->fd[i].f_op = fops_table[FILE_DAT_TYPE];
 					//fops_table[i] = dir_ops;
 				}
 				
 				else if (d->type == 2)
 				{
-					current->fd[i].f_op->read = file_read;
-					current->fd[i].f_op->write = file_write;
-					current->fd[i].f_op->open = file_open;
-					current->fd[i].f_op->close = file_close;
+					// current->fd[i].f_op->read = file_read;
+					// current->fd[i].f_op->write = file_write;
+					// current->fd[i].f_op->open = file_open;
+					// current->fd[i].f_op->close = file_close;
 					current->fd[i].f_inode = d->inode;
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1;
+					current->fd[i].f_op = &file_ops;
 					//current->fd[i].f_op = fops_table[FILE_DIR_TYPE];
 					//fops_table[i] = file_ops;
 				}
 				current->fd[i].fd_index = i;
-
+				current->fd[i].f_op->open(&(current->fd[i]));
 				break;
 
 			}
@@ -241,7 +273,11 @@ asmlinkage int32_t close (int32_t fd){
 	{
 		return -1;
 	}
-	
+	if(current->fd[fd].flags == 0){
+		return -1;
+	}
+	current->fd[fd].f_op->close(&(current->fd[fd]));
+
 	current->fd[fd].f_inode = NULL;
 	current->fd[fd].f_pos = NULL;
 	current->fd[fd].f_op = NULL;
@@ -254,7 +290,17 @@ asmlinkage int32_t close (int32_t fd){
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 {
-	return 0;
+	if(nbytes > LINE_BUF_SIZE)
+		nbytes = LINE_BUF_SIZE;
+	PCB_t * current;
+	cur_pcb(current);
+	int i;
+	for(i=0;i<nbytes;i++){
+		buf[i] = current->args[i];
+		if(current->args[i] == '\0')
+			break;
+	}
+	return i;
 }
 asmlinkage int32_t vidmap (uint8_t** screen_start)
 {
