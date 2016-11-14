@@ -1,17 +1,14 @@
-
 // #define ASM 1
-
-
-
-
-
+// #include "syscall_linkage.h"
 
 // .globl systemcall_linkage
 // .globl bad
 
 // .text 
+// .align 4
 
 // systemcall_linkage:
+
 
 
 // 	cmpl $1, %eax
@@ -47,7 +44,7 @@
 
 
 // syscall_jumptable:
-// 	.long halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn
+// 	.long 0x0, halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn
 
 
 

@@ -207,10 +207,14 @@ asmlinkage int32_t open (const uint8_t* filename)
 				
 				if (d->type == 0)
 				{
+
+
+
 					// current->fd[i].f_op->read = RTC_read;
 					// current->fd[i].f_op->write =  RTC_write;
 					// current->fd[i].f_op->open =  RTC_open;
 					// current->fd[i].f_op->close =  RTC_close;
+
 					current->fd[i].f_inode = NULL;
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1;
@@ -246,8 +250,11 @@ asmlinkage int32_t open (const uint8_t* filename)
 					//fops_table[i] = file_ops;
 				}
 				current->fd[i].fd_index = i;
-				current->fd[i].f_op->open(&(current->fd[i]));
-				break;
+				//current->fd[i].f_op->open(&(current->fd[i]));
+				struct file* fp=(struct file*) (&(current->fd[i]));
+				
+				return fp->fd[i]->f_op->open(fp);
+
 
 			}
 		}
@@ -259,7 +266,7 @@ asmlinkage int32_t open (const uint8_t* filename)
 		return -1;
 	}
 
-	return 0;
+
 	
 }
 asmlinkage int32_t close (int32_t fd){
@@ -284,9 +291,10 @@ asmlinkage int32_t close (int32_t fd){
 	current->fd[fd].flags = NULL;
 	current->fd[fd].fd_index = NULL;
 
+	struct file* fp=(struct file*) (&(current->fd[fd]));
 
 
-	return 0;
+	return fp->fd[i]->f_op->close(fp);
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 {
