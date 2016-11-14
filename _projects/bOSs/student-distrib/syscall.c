@@ -14,13 +14,18 @@ void check_i(){
 			: "=r" (eflags):: "memory");   				
 	printf("%x\n",eflags & 0x200);
 }
+/*
+INPUTS: command
+OUTPUTS: returns -1 on failure, 256 for an excption, or 0->255 if a halt occurs
 
+enters userspace, pages memory for process, context switch, etc
+*/
 asmlinkage int32_t execute (const uint8_t* command){
-    asm volatile("cli");
+    asm volatile("cli"); //clear interrupts
 	//Obtain PID
 	int i;
 	uint32_t pid = -1;
-	for(i=0;i<MAX_USER_PROG;i++){
+	for(i=0;i<MAX_USER_PROG;i++){    //set process id, if == -1, max processes
 		if(proc_id_used[i] == false){
 			pid = i;
 			proc_id_used[i] = true;
@@ -31,12 +36,12 @@ asmlinkage int32_t execute (const uint8_t* command){
 		printf("Max processes used.");
 		return -1;
 	}
-	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB4 * (pid+1));
+	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB4 * (pid+1)); //get pcb to point to kernel
 
-	pcb->pid = pid;
+	pcb->pid = pid; //set member variables from current tss
 	pcb->esp0 = tss.esp0;
 	if(pcb->pid == 0)
-		pcb->parent = pcb;
+		pcb->parent = pcb; //if pid = 0 is the first process
 	//Parse args
 	//printf("%s",command);
 	for(i=0;i<=MAX_BUF_INDEX && command[i] != ' '&& command[i] != '\0';i++){
@@ -54,7 +59,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 		return -1;
 	}
 	uint8_t head[40];
-	read_data (d.inode, 0, head, 40);
+	read_data (d.inode, 0, head, 40); //ELF check 
 	if(head[0] != ELF_MAGIC_0 || head[1] != 'E' || head[2] != 'L' || head[3] != 'F'){
 		proc_id_used[pid] = false;
 		return -1;
@@ -85,12 +90,13 @@ asmlinkage int32_t execute (const uint8_t* command){
 		movl    %%ebp, %1"
 		: "=r"(pcb->esp), "=r"(pcb->ebp), "=r"(pcb->ss0)
 		: 
-		:"memory");
+		:"memory"); //change segment registers 
 	uint32_t u_esp = USER_MEM_LOCATION + MB4 -4 ;
+	//calculate user stack
 	//init file ops
 	//printf("%x\n",pcb);
 	//printf("%x\n",parent);
-
+	//stdin / stdout
 	pcb->fd[0].f_op = &terminal_ops;
 	pcb->fd[0].flags =1;
 	pcb->fd[1].f_op = &terminal_ops;
@@ -100,7 +106,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//Change TSS
 	tss.esp0 = KERNEL_TOP-KB4 * pid -4;//address of new kernel stack
 	tss.ss0 = KERNEL_DS;
-	//set up fake table thingy on stack
+	//set up fake table thingy on stack context switch
 	asm volatile("\
 		movw	%2,%%ax 	\n\
 		movw    %%ax, %%ds		\n\
@@ -127,6 +133,12 @@ asmlinkage int32_t execute (const uint8_t* command){
 
 	return ret;
 }
+/*
+INPUTS: status
+OUTPUTS: returns -1 on fail, 0 on success
+Closes pcb, restores process back to parent, 
+
+*/
 asmlinkage int32_t halt (uint8_t status){
 	PCB_t * pcb;
 	cur_pcb(pcb);
@@ -184,20 +196,26 @@ asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 	int32_t val=(fp->f_op->write(fp, buf, nbytes));
 	return val;
 }
+
+/*
+INPUTS: filename
+OUTPUTS: returns the proper file descriptor 
+sets jump table, other member elements of file* struct
+*/
 asmlinkage int32_t open (const uint8_t* filename)
 {
 	int i;
 	dentry_t d;
-	uint32_t success;
-	PCB_t * current;
-	cur_pcb(current);
+	uint32_t success; //flag
+	PCB_t * current;	
+	cur_pcb(current);	//macro grabs current process's pcb
 	if(filename == NULL)
 		return -1;
 	//printf("%x %s\n",filename,filename);
 	success = read_dentry_by_name(filename, &d);
-	if (success == 0)
+	if (success == 0) //if read call worked 
 	{
-		for (i=2;i<8;i++)
+		for (i=2;i<8;i++) //iterate thru file descriptors that arent stdin/stdout
 		{
 			/*
 			set flags == 1 if that file descriptor is in use 
@@ -221,10 +239,10 @@ asmlinkage int32_t open (const uint8_t* filename)
 					// current->fd[i].f_op->open =  RTC_open;
 					// current->fd[i].f_op->close =  RTC_close;
 
-					current->fd[i].f_inode = NULL;
+					current->fd[i].f_inode = NULL; //set to null for rtc 
 					current->fd[i].f_pos = 0;
-					current->fd[i].flags = 1;
-					current->fd[i].f_op = &RTC_ops;
+					current->fd[i].flags = 1; //mark as in use 
+					current->fd[i].f_op = &RTC_ops; //set jump table
 					//fops_table[i] = RTC_ops;
 				}
 				
@@ -234,10 +252,10 @@ asmlinkage int32_t open (const uint8_t* filename)
 					// current->fd[i].f_op->write = dir_write;
 					// current->fd[i].f_op->open = dir_open;
 					// current->fd[i].f_op->close = dir_close;
-					current->fd[i].f_inode = d.inode;
+					current->fd[i].f_inode = d.inode; //mark 
 					current->fd[i].f_pos = 0;
-					current->fd[i].flags = 1;
-					current->fd[i].f_op = &dir_ops;
+					current->fd[i].flags = 1; //mark as in use 
+					current->fd[i].f_op = &dir_ops; //jump table
 					 //current->fd[i].f_op = fops_table[FILE_DAT_TYPE];
 					//fops_table[i] = dir_ops;
 				}
@@ -248,45 +266,52 @@ asmlinkage int32_t open (const uint8_t* filename)
 					// current->fd[i].f_op->write = file_write;
 					// current->fd[i].f_op->open = file_open;
 					// current->fd[i].f_op->close = file_close;
-					current->fd[i].f_inode = d.inode;
+					current->fd[i].f_inode = d.inode; //set inode
 					current->fd[i].f_pos = 0;
-					current->fd[i].flags = 1;
-					current->fd[i].f_op = &file_ops;
+					current->fd[i].flags = 1; //mark as in use
+					current->fd[i].f_op = &file_ops; //table
 					//current->fd[i].f_op = fops_table[FILE_DIR_TYPE];
 					//fops_table[i] = file_ops;
 				}
-				current->fd[i].fd_index = i;
+				current->fd[i].fd_index = i; //store file descriptor
 				//current->fd[i].f_op->open(&(current->fd[i]));
 				//struct file* fp=(struct file*) (&(current->fd[i]));
 				if(current->fd[i].f_op->open((&(current->fd[i]))) == -1)
-					return -1;
-				return i;
+					return -1; //check if open works
+				return i; //returns fd
 
 
 			}
 		}
 	
 	}
-	return -1;
+	return -1; //fail
 
 
 	
 }
+
+/*
+INPUTS: File descriptor
+OUTPUTS: returns -1 on fail, else returns value from close
+Closes file descriptor in PCB , sets members structs to null
+
+*/
 asmlinkage int32_t close (int32_t fd){
 		
 	PCB_t * current;
-	cur_pcb(current);
+	cur_pcb(current); //grab current pcb
 
-	if (fd > 7 || fd < 2)
+	if (fd > 7 || fd < 2) //sanity check 
 	{
 		return -1;
 	}
-	if(current->fd[fd].flags == 0){
+	if(current->fd[fd].flags == 0){ //check for open descriptor 
 		return -1;
 	}
-	int32_t ret = current->fd[fd].f_op->close(&(current->fd[fd]));
+	int32_t ret = current->fd[fd].f_op->close(&(current->fd[fd])); //jump to correct function
 
-	current->fd[fd].f_inode = NULL;
+	current->fd[fd].f_inode = NULL; //set all to null
 	current->fd[fd].f_pos = NULL;
 	current->fd[fd].f_op = NULL;
 	current->fd[fd].flags = NULL;
@@ -295,7 +320,7 @@ asmlinkage int32_t close (int32_t fd){
 	//struct file* fp=(struct file*) (&(current->fd[fd]));
 
 
-	return ret;
+	return ret; 
 }
 asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 {
