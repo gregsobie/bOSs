@@ -128,6 +128,8 @@ int32_t read_dentry_by_name (const uint8_t* fname, dentry_t* dentry){
 	for(i=0;i<fs_base->num_entries;i++){
 		dentry_int_t * d = &(fs_base->dentries[i]); //Grab each entry
 		if(!strncmp((char *)fname,d->name,fname_len)){ //Check if the name matches
+			if(fname_len< FILE_NAME_LEN && d->name[fname_len] != '\0')
+				return -1;
 			strncpy(dentry->name, d->name, FILE_NAME_LEN); //If so, grab the data
 			dentry->name[FILE_NAME_LEN] = '\0';
 			dentry->type = d->type;
@@ -178,4 +180,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
 		f_pos++;
 	}
 	return read;
+}
+int32_t none(){
+	return -1;
 }
