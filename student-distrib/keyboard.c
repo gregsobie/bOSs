@@ -230,7 +230,7 @@ System call for open of file type = terminal
 */
 
 int32_t terminal_open(struct file * f){
-	return 0;
+	return -1;
 }
 
 /*
@@ -242,7 +242,7 @@ System call for close of file type = terminal
 */
 
 int32_t terminal_close(struct file * f){
-	return 0;
+	return -1;
 }
 
 

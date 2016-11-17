@@ -39,12 +39,12 @@ enables bit 4 of cr4 to enable PSE
 */
 void enablePaging(){
 	asm volatile(
-					"mov %%cr4, %%eax;"
-					"orl $0x00000010, %%eax;"
-					"mov %%eax, %%cr4;"
-					"mov %%cr0, %%eax;"
-				 	"orl $0x80000000, %%eax;"
-					"mov %%eax, %%cr0;":::"eax");
+		"mov %%cr4, %%eax;"
+		"orl $0x00000010, %%eax;"
+		"mov %%eax, %%cr4;"
+		"mov %%cr0, %%eax;"
+	 	"orl $0x80000000, %%eax;"
+		"mov %%eax, %%cr0;":::"eax");
 }
 
 
@@ -57,4 +57,9 @@ to page directory
 void loadPageDirectory(unsigned int* pd){
 	asm volatile("	mov %0, %%cr3;"::"r" (pd) );
 
+}
+
+
+uint32_t is_kernel_ptr(const void * ptr){
+	return (uint32_t)ptr < 0x00800000; 
 }

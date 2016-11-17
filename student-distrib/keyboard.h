@@ -93,11 +93,16 @@ int32_t terminal_read(struct file * f , char * buf, uint32_t nbytes);
 /* Write input to screen (characters pressed) */
 int32_t terminal_write(struct file * f, const char * buf, uint32_t nbytes);
 
-static struct file_operations terminal_ops __attribute__((unused)) = {
+static struct file_operations stdin_ops __attribute__((unused)) = {
 	.read = terminal_read,
+	.write = none,
+	.open = terminal_open,
+	.close = terminal_close
+};
+static struct file_operations stdout_ops __attribute__((unused)) = {
+	.read = none,
 	.write = terminal_write,
 	.open = terminal_open,
 	.close = terminal_close
 };
-
 #endif

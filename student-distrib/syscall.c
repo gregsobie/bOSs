@@ -37,7 +37,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 		return -1;
 	}
 	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB4 * (pid+1)); //get pcb to point to kernel
-
+	memset(pcb,0,sizeof(PCB_t));
 	pcb->pid = pid; //set member variables from current tss
 	pcb->esp0 = tss.esp0;
 	if(pcb->pid == 0)
@@ -94,15 +94,12 @@ asmlinkage int32_t execute (const uint8_t* command){
 	uint32_t u_esp = USER_MEM_LOCATION + MB4 -4 ;
 	//calculate user stack
 	//init file ops
-	//printf("%x\n",pcb);
-	//printf("%x\n",parent);
+
 	//stdin / stdout
-	pcb->fd[0].f_op = &terminal_ops;
+	pcb->fd[0].f_op = &stdin_ops;
 	pcb->fd[0].flags =1;
-	pcb->fd[1].f_op = &terminal_ops;
+	pcb->fd[1].f_op = &stdout_ops;
 	pcb->fd[1].flags =1;
-	//
-	//printf("%x %x %x %d\n",eip, (KERNEL_TOP + MB4 * pid), u_esp,USER_MEM_LOCATION >> 22);
 	//Change TSS
 	tss.esp0 = KERNEL_TOP-KB4 * pid -4;//address of new kernel stack
 	tss.ss0 = KERNEL_DS;
@@ -187,6 +184,8 @@ asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
 		return -1;
 	}
 	// Return specified read function return value
+	if(pcb->fd[fd].f_op->read == NULL)
+		return -1;
 	int32_t val = (pcb->fd[fd].f_op->read(&(pcb->fd[fd]), buf, nbytes));
 	return val;
 }
@@ -202,6 +201,8 @@ asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 	cur_pcb(pcb); // Retrieve updated PCB
 	// Check if there are valid values
 	if (pcb->fd[fd].flags==0 || buf==NULL || fd > 7 || fd < 0)
+		return -1;
+	if(is_kernel_ptr(buf))
 		return -1;
 
 	struct file* fp=(struct file*) (&(pcb->fd[fd]));
@@ -244,51 +245,30 @@ asmlinkage int32_t open (const uint8_t* filename)
 				
 				if (d.type == 0)
 				{
-
-
-
-					// current->fd[i].f_op->read = RTC_read;
-					// current->fd[i].f_op->write =  RTC_write;
-					// current->fd[i].f_op->open =  RTC_open;
-					// current->fd[i].f_op->close =  RTC_close;
-
 					current->fd[i].f_inode = NULL; //set to null for rtc 
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1; //mark as in use 
 					current->fd[i].f_op = &RTC_ops; //set jump table
-					//fops_table[i] = RTC_ops;
 				}
 				
 				else if (d.type == 1)
 				{
-					// current->fd[i].f_op->read = dir_read;
-					// current->fd[i].f_op->write = dir_write;
-					// current->fd[i].f_op->open = dir_open;
-					// current->fd[i].f_op->close = dir_close;
+
 					current->fd[i].f_inode = d.inode; //mark 
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1; //mark as in use 
 					current->fd[i].f_op = &dir_ops; //jump table
 					 //current->fd[i].f_op = fops_table[FILE_DAT_TYPE];
-					//fops_table[i] = dir_ops;
 				}
 				
 				else if (d.type == 2)
 				{
-					// current->fd[i].f_op->read = file_read;
-					// current->fd[i].f_op->write = file_write;
-					// current->fd[i].f_op->open = file_open;
-					// current->fd[i].f_op->close = file_close;
 					current->fd[i].f_inode = d.inode; //set inode
 					current->fd[i].f_pos = 0;
 					current->fd[i].flags = 1; //mark as in use
 					current->fd[i].f_op = &file_ops; //table
-					//current->fd[i].f_op = fops_table[FILE_DIR_TYPE];
-					//fops_table[i] = file_ops;
 				}
 				current->fd[i].fd_index = i; //store file descriptor
-				//current->fd[i].f_op->open(&(current->fd[i]));
-				//struct file* fp=(struct file*) (&(current->fd[i]));
 				if(current->fd[i].f_op->open((&(current->fd[i]))) == -1)
 					return -1; //check if open works
 				return i; //returns fd
@@ -354,6 +334,8 @@ asmlinkage int32_t getargs (uint8_t* buf, int32_t nbytes)
 }
 asmlinkage int32_t vidmap (uint8_t** screen_start)
 {
+	if (screen_start == NULL || is_kernel_ptr(screen_start))
+		return -1;
 	return 0;
 }
 asmlinkage int32_t set_handler (int32_t signum, void* handler_address){
