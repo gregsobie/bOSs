@@ -336,6 +336,11 @@ asmlinkage int32_t vidmap (uint8_t** screen_start)
 {
 	if (screen_start == NULL || is_kernel_ptr(screen_start))
 		return -1;
+	*screen_start = (uint8_t*) 0x08400000;
+	PCB_t * current;
+	cur_pcb(current);
+	proc_page_directory[current->pid][0x08400000 >> 22] = (uint32_t)(&(proc_video_tables[current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+	proc_video_tables[current->pid][0] =  VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
 	return 0;
 }
 asmlinkage int32_t set_handler (int32_t signum, void* handler_address){
@@ -343,5 +348,5 @@ asmlinkage int32_t set_handler (int32_t signum, void* handler_address){
 }
 asmlinkage int32_t sigreturn (void){
 
-return 0;
+	return 0;
 }

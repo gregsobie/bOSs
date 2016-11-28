@@ -1,6 +1,5 @@
 #include "lib.h"
 #include "paging.h"
-#define VIDEO 0xB8000
 
 /*
 initialize the 4 mb kernel page 

@@ -17,6 +17,7 @@
 #define FLAG_GLOBAL        0x100
 #define TABLE_SIZE         1024
 #define DIRECTORY_SIZE     1024
+#define VIDEO 0xB8000
 
 extern void loadPageDirectory(uint32_t *);
 extern void enablePaging();
@@ -26,6 +27,8 @@ void init_kernel_pd();
 uint32_t kernel_page_directory[1024] __attribute__((aligned(4096)));
 uint32_t video_page_table[1024] __attribute__((aligned(4096)));
 uint32_t proc_page_directory[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
+uint32_t proc_video_tables[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
+
 static  uint8_t proc_id_used[MAX_USER_PROG] __attribute__((unused)) = {false};
 uint32_t is_kernel_ptr(const void * ptr);
 
