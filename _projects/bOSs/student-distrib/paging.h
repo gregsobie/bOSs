@@ -18,7 +18,7 @@
 #define TABLE_SIZE         1024
 #define DIRECTORY_SIZE     1024
 #define VIDEO 0xB8000
-
+#define USER_VIDEO 0x08400000 
 extern void loadPageDirectory(uint32_t *);
 extern void enablePaging();
 

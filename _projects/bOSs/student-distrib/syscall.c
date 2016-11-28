@@ -179,7 +179,7 @@ asmlinkage int32_t read (int32_t fd, void* buf, int32_t nbytes){
 	PCB_t * pcb;
 	cur_pcb(pcb); // Retrieve updated PCB
 	// Check if there are valid values
-	if (pcb->fd[fd].flags == 0 || fd >= 8 || fd < 0)
+	if (pcb->fd[fd].flags == 0 || fd >= 8 || fd < 0 || is_kernel_ptr(buf))
 	{
 		return -1;
 	}
@@ -204,10 +204,8 @@ asmlinkage int32_t write (int32_t fd, const void* buf, int32_t nbytes){
 		return -1;
 	if(is_kernel_ptr(buf))
 		return -1;
-
-	struct file* fp=(struct file*) (&(pcb->fd[fd]));
 	// Return specified read function return value
-	int32_t val=(fp->f_op->write(fp, buf, nbytes));
+	int32_t val=(pcb->fd[fd].f_op->write((&(pcb->fd[fd])), buf, nbytes));
 	return val;
 }
 
@@ -336,10 +334,10 @@ asmlinkage int32_t vidmap (uint8_t** screen_start)
 {
 	if (screen_start == NULL || is_kernel_ptr(screen_start))
 		return -1;
-	*screen_start = (uint8_t*) 0x08400000;
+	*screen_start = (uint8_t*) USER_VIDEO;
 	PCB_t * current;
 	cur_pcb(current);
-	proc_page_directory[current->pid][0x08400000 >> 22] = (uint32_t)(&(proc_video_tables[current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+	proc_page_directory[current->pid][USER_VIDEO >> 22] = (uint32_t)(&(proc_video_tables[current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
 	proc_video_tables[current->pid][0] =  VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
 	return 0;
 }
