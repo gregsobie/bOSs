@@ -6,14 +6,6 @@
 #include "RTC.h"
 #include "keyboard.h"
 
-void check_i(){
-	uint32_t eflags;
-	asm volatile("pushfl      \n\
-			movl (%%esp),%0; 			\n\
-			addl $4,%%esp"
-			: "=r" (eflags):: "memory");   				
-	printf("%x\n",eflags & 0x200);
-}
 /*
 INPUTS: command
 OUTPUTS: returns -1 on failure, 256 for an excption, or 0->255 if a halt occurs
