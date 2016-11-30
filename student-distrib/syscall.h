@@ -39,8 +39,6 @@ asmlinkage int32_t vidmap (uint8_t** screen_start);
 asmlinkage int32_t set_handler (int32_t signum, void* handler_address);
 asmlinkage int32_t sigreturn (void);
 
-void check_i();
-
 #define cur_pcb(addr)                   \
 do {                                    \
 	asm volatile("movl %%esp,%0      \n\
