@@ -8,7 +8,7 @@
 #include "multiboot.h"
 #include "types.h"
 #include "syscall_linkage.h"
-
+#include "syscall.h"
 void initialize_idt()
 {
 	int i;
@@ -107,96 +107,92 @@ void initialize_idt()
 	idt[128].size=1;
 	idt[128].reserved0=0;
 }
-void fail(){
-	//When we implement program execution, we will need to extend/move this
-	asm volatile("hlt;");
-}
 void de_handler()
 {
 	cli();
 	printf("divide by zero exception");
-	fail();
+	halt(-1);
 
 }
 void db_handler()
 {
 	cli();
 	printf("db exception");
-	fail();
+	halt(-1);
 }
 void nmi_handler()
 {
 	cli();
 	printf("nmi exception");
-	fail();
+	halt(-1);
 }
 void bp_handler()
 {
 	cli();
 	printf("bp exception");
-	fail();
+	halt(-1);
 }
 void of_handler()
 {
 	cli();
 	printf("of exception");
-	fail();
+	halt(-1);
 
 }
 void br_handler()
 {
 	cli();
 	printf("br exception");
-	fail();
+	halt(-1);
 }
 void ud_handler()
 {
 	cli();
 	printf("ud exception");
-	fail();
+	halt(-1);
 }
 void nm_handler()
 {
 	cli();
 	printf("nm exception");
-	fail();
+	halt(-1);
 
 }
 void df_handler()
 {
 	cli();
 	printf("df exception");
-	fail();
+	halt(-1);
 }
 void co_segment_overrun_handler()
 {
 	cli();
 	printf("co_segment_overrun exception");
-	fail();
+	halt(-1);
 }
 void ts_handler()
 {
 	cli();
 	printf("ts exception");
-	fail();
+	halt(-1);
 }
 void np_handler()
 {
 	cli();
 	printf("np exception");
-	fail();
+	halt(-1);
 }
 void ss_handler()
 {
 	cli();
 	printf("ss exception");
-	fail();
+	halt(-1);
 }
 void gp_handler()
 {
 	cli();
 	printf("gp exception");
-	fail();
+	halt(-1);
 }
 void pf_handler()
 {
@@ -204,38 +200,38 @@ void pf_handler()
 	uint32_t cr2;
 	uint32_t eec;
 	asm volatile("mov %%cr2,%0; popl %1":"=r"(cr2),"=r"(eec)::"memory");
-	printf("pf exception at %x, %x",cr2,eec);
-	fail();
+	printf("pf exception at %x, %x\n",cr2,eec);
+	halt(-1);
 }
 void mf_handler()
 {
 	cli();
 	printf("mf exception");
-	fail();
+	halt(-1);
 }
 void ac_handler()
 {
 	cli();
 	printf("ac exception");
-	fail();
+	halt(-1);
 }
 void mc_handler()
 {
 	cli();
 	printf("mc exception");
-	fail();
+	halt(-1);
 }
 void xf_handler()
 {
 	cli();
 	printf("xf exception");
-	fail();
+	halt(-1);
 }
 void generic_handler()
 {
 	cli();
 	printf("Unknown exception");
-	fail();
+	halt(-1);
 }
 void pit_irq_handler()
 {
