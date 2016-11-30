@@ -23,6 +23,8 @@ enters userspace, pages memory for process, context switch, etc
 asmlinkage int32_t execute (const uint8_t* command){
     asm volatile("cli"); //clear interrupts
 	//Obtain PID
+	if(command == NULL)
+		return -1;
 	int i;
 	uint32_t pid = -1;
 	for(i=0;i<MAX_USER_PROG;i++){    //set process id, if == -1, max processes
