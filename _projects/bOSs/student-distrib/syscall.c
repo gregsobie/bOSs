@@ -54,6 +54,8 @@ asmlinkage int32_t execute (const uint8_t* command){
 	for(;i<=MAX_BUF_INDEX && command[i] != '\0';i++){
 		pcb->args[i-offset] = command[i];
 	}
+	i--;
+	while(pcb->args[i-offset] == ' ')pcb->args[(i--)-offset] = '\0';
 	dentry_t d;
 	if(read_dentry_by_name (pcb->name, &d) == -1){
 		proc_id_used[pid] = false;
