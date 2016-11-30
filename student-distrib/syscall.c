@@ -33,13 +33,12 @@ asmlinkage int32_t execute (const uint8_t* command){
 		}
 	}
 	if(pid == -1){
-		printf("Max processes used.");
+		printf("Max processes used.\n");
 		return -1;
 	}
-	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB4 * (pid+1)); //get pcb to point to kernel
+	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB8 * (pid+1)); //get pcb to point to kernel
 	memset(pcb,0,sizeof(PCB_t));
 	pcb->pid = pid; //set member variables from current tss
-	pcb->esp0 = tss.esp0;
 	if(pcb->pid == 0)
 		pcb->parent = pcb; //if pid = 0 is the first process
 	//Parse args
@@ -84,11 +83,13 @@ asmlinkage int32_t execute (const uint8_t* command){
 	PCB_t * parent;
 	cur_pcb(parent);
 	pcb->parent = parent;
+	parent->esp0 = tss.esp0;
+
 	asm volatile("\
 		movl	%%ss,%2		\n\
 		movl	%%esp,%0 	\n\
 		movl    %%ebp, %1"
-		: "=r"(pcb->esp), "=r"(pcb->ebp), "=r"(pcb->ss0)
+		: "=r"(pcb->parent->esp), "=r"(pcb->parent->ebp), "=r"(pcb->parent->ss0)
 		: 
 		:"memory"); //change segment registers 
 	uint32_t u_esp = USER_MEM_LOCATION + MB4 -4 ;
@@ -101,7 +102,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	pcb->fd[1].f_op = &stdout_ops;
 	pcb->fd[1].flags =1;
 	//Change TSS
-	tss.esp0 = KERNEL_TOP-KB4 * pid -4;//address of new kernel stack
+	tss.esp0 = KERNEL_TOP-KB8 * pid -4;//address of new kernel stack
 	tss.ss0 = KERNEL_DS;
 	//set up fake table thingy on stack context switch
 	asm volatile("\
@@ -127,7 +128,6 @@ asmlinkage int32_t execute (const uint8_t* command){
 		: "eax");
 	uint32_t ret;
 	asm volatile("movl %%eax, %0":"=r" (ret));
-
 	return ret;
 }
 /*
@@ -139,20 +139,22 @@ Closes pcb, restores process back to parent,
 asmlinkage int32_t halt (uint8_t status){
 	PCB_t * pcb;
 	cur_pcb(pcb);
-
 	//Change paging back
 
 	//Security-shuld clean old memory space
+	memset((void *)USER_MEM_LOCATION,0,MB4);
+
 	loadPageDirectory(proc_page_directory[pcb->parent->pid]);
-	//Change TSS
-	tss.esp0 = pcb->parent->esp0;
-	tss.ss0 = pcb->parent->ss0;
 	//close any FDs that need it
 	int i = 0;
 	for (i=0;i<8;i++){
 		close(i);
 	}
 	proc_id_used[pcb->pid] = false;
+
+	//Change TSS
+	tss.esp0 = pcb->parent->esp0;
+	tss.ss0 = pcb->parent->ss0;
 	//change esp/ebp
 	if(pcb->pid == 0){
 		execute((uint8_t *)"shell");
@@ -162,9 +164,8 @@ asmlinkage int32_t halt (uint8_t status){
 		movl	%0,%%esp 	\n\
 		movl    %1,%%ebp"	
 		:
-		: "r"(pcb->esp),"r"(pcb->ebp),"r"((uint32_t)status)
+		: "r"(pcb->parent->esp),"r"(pcb->parent->ebp),"r"((uint32_t)status)
 		: "memory" );
-
 	asm volatile("jmp halt_ret_label");
 	return 0;
 }

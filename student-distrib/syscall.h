@@ -5,7 +5,7 @@
 #define KERNEL_STACK_SIZE 0x2000 //8KB
 #define PCB_MASK 0xFFFFE000
 #define MB4	0x00400000
-#define KB4 0x2000
+#define KB8 0x2000
 #define ELF_MAGIC_0 0x7f
 #define KERNEL_TOP	0x00800000
 
