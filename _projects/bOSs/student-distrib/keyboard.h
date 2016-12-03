@@ -60,7 +60,7 @@
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
 extern uint8_t _lastScanCode;
-char line_buffer[128];
+char line_buffer[3][128];
 volatile int line_buffer_index;
 
 /* Prepares driver for use */
