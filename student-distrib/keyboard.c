@@ -172,6 +172,12 @@ uint8_t caps_lock_and_shift[128] =  {
  				while(line_buffer_index > 0)
  					line_buffer[line_buffer_index--] = '\0';
  				line_buffer_index = 0;
+ 		}else if(alt && keyboard_scancode == F1CODE){
+ 				printf("Mohammed\n");
+ 		}else if(alt && keyboard_scancode == F2CODE){
+ 				printf("Arnav\n");
+ 		}else if(alt && keyboard_scancode == F3CODE){
+ 				printf("Bogue\n");
  		}else{
  			/* If input line buffer is not full */
  			if(line_buffer_index < MAX_BUF_INDEX){

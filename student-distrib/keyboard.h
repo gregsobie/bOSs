@@ -43,6 +43,9 @@
 #define KEYBOARD_LINEFEED 	 0x0A
 #define KEYBOARD_BACKSPACE   0x0E
 #define KEYBOARD_LEFT_CONTROL 0x1D
+#define F1CODE				 0x3B
+#define F2CODE				 0x3C
+#define F3CODE				 0x3D
 
  /*Helpful constants*/
  #define MAX_COL_INDEX 	79
