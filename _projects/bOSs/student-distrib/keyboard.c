@@ -175,11 +175,11 @@ uint8_t caps_lock_and_shift[128] =  {
  					line_buffer[cur_terminal][line_buffer_index--] = '\0';
  				line_buffer_index = 0;
  		}else if(alt && keyboard_scancode == F1CODE){
- 				printf("Mohammed\n");
+ 				switch_terminals(1);
  		}else if(alt && keyboard_scancode == F2CODE){
- 				printf("Arnav\n");
+ 				switch_terminals(2);
  		}else if(alt && keyboard_scancode == F3CODE){
- 				printf("Bogue\n");
+ 				switch_terminals(3);
  		}else{
  			/* If input line buffer is not full */
  			if(line_buffer_index < MAX_BUF_INDEX){
@@ -316,7 +316,7 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 	return bytes_written;
 }
 
-void switch_terminals ()
+void switch_terminals(uint8_t term)
 {
 	
 }
