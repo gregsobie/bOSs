@@ -96,6 +96,9 @@ int32_t terminal_read(struct file * f , char * buf, uint32_t nbytes);
 /* Write input to screen (characters pressed) */
 int32_t terminal_write(struct file * f, const char * buf, uint32_t nbytes);
 
+/* Function to switch between multiple terminals */
+void switch_terminals(uint8_t term);
+
 static struct file_operations stdin_ops __attribute__((unused)) = {
 	.read = terminal_read,
 	.write = none,
