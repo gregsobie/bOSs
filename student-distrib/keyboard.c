@@ -9,6 +9,7 @@
 
 bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl;
 volatile bool typingLine;
+int cur_terminal;
 
 /* Character data corresponding to make codes, where
  * Zero denotes an unprintable character */
@@ -18,7 +19,7 @@ uint8_t keyboard_chars[128] = {
 	 	'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0,'\\', 'z', 'x', 'c', 'v', 
 	 	'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' ',	 0,
 	    0,	0,   0,   0,   0,   0,   0,   0,   0, 0, 0,	0, 0, 0, 0,	/* Page Up */
-	  	'-', 0,	0, 0, '+', 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	/* Remaining keys undefined */
+	  	'-', 0,	0, 0, '+', 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	/* Remianing keys undefined */
 	};
 /* Capital letters and symbols */
 uint8_t shift_keyboard_chars[128] = {
@@ -52,6 +53,7 @@ uint8_t caps_lock_and_shift[128] =  {
 
  	typingLine = true;
  	line_buffer_index=0;
+ 	cur_terminal = 1;
  	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
  	keyboard_set_leds(numlock, scrolllock, capslock);
@@ -148,7 +150,7 @@ uint8_t caps_lock_and_shift[128] =  {
  			scrolllock = !scrolllock;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
  			/* Input line must end with a linefeed character */
- 			line_buffer[line_buffer_index] = KEYBOARD_LINEFEED;
+ 			line_buffer[cur_terminal][line_buffer_index] = KEYBOARD_LINEFEED;
  			typingLine = false;
  			/* If located at max row, move all other entries upward */
  			if(getY() == MAX_ROW_INDEX){
@@ -170,7 +172,7 @@ uint8_t caps_lock_and_shift[128] =  {
  				clear();
  				move_csr(0,0);
  				while(line_buffer_index > 0)
- 					line_buffer[line_buffer_index--] = '\0';
+ 					line_buffer[cur_terminal][line_buffer_index--] = '\0';
  				line_buffer_index = 0;
  		}else if(alt && keyboard_scancode == F1CODE){
  				printf("Mohammed\n");
@@ -196,8 +198,8 @@ uint8_t caps_lock_and_shift[128] =  {
 			 			keyboard_character = keyboard_chars[keyboard_scancode];
 			 	}
 			 	/* Store character to input line buffer and echo to terminal */
-			 	line_buffer[line_buffer_index] = keyboard_character;
-			 	terminal_write(NULL, line_buffer + line_buffer_index, BYTE_PER_CHAR);
+			 	line_buffer[cur_terminal][line_buffer_index] = keyboard_character;
+			 	terminal_write(NULL, line_buffer[cur_terminal] + line_buffer_index, BYTE_PER_CHAR);
 			 	/* If X is at max column and Y is at max row,
 			 	 * shift all elements upward by one row */
 			 	if(getX() == MAX_COL_INDEX && getY()==MAX_ROW_INDEX)
@@ -276,12 +278,12 @@ int32_t terminal_read(struct file * f, char * buf, uint32_t nbytes){
 	/* Copy from line_buffer into terminal_buffer */
 	int32_t i;
 	for(i=0; i<nbytes; i++){
-		terminal_buffer[i] = line_buffer[i];
+		terminal_buffer[i] = line_buffer[cur_terminal][i];
 	}
 	terminal_buffer[i] = '\0';
 	/* Reset input line buffer index */
 	for(i=0; i<nbytes; i++){
-		line_buffer[i] = '\0';
+		line_buffer[cur_terminal][i] = '\0';
 	}
  	line_buffer_index=0;
 	return (strlen((int8_t*)terminal_buffer));
@@ -312,4 +314,9 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 	move_csr(getX(),getY());
 	sti();
 	return bytes_written;
+}
+
+void switch_terminals ()
+{
+	
 }

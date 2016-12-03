@@ -23,7 +23,8 @@ typedef struct PCB{
 	uint32_t ss0;
 	uint32_t esp;
 	uint32_t ebp;
-	struct file fd[8];	
+	uint32_t terminal_id; //ranges from 1-3 depending on what terminal this program is executing in
+ 	struct file fd[8];	
 	struct PCB * parent;
 	//Register table
 } PCB_t;
