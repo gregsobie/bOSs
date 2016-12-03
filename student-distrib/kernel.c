@@ -13,6 +13,7 @@
 #include "keyboard.h"
 #include "filesystem.h"
 #include "syscall.h"
+#include "scheduler.h"
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
@@ -160,7 +161,7 @@ entry (unsigned long magic, unsigned long addr)
 
 	lidt(idt_desc_ptr);
 	i8259_init();
-	enable_irq(0);
+	init_PIT();
 	enable_irq(2);
 
 	//RTC_init();
