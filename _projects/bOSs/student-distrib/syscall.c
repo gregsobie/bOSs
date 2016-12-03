@@ -5,7 +5,7 @@
 #include "lib.h"
 #include "RTC.h"
 #include "keyboard.h"
-
+#include "scheduler.h"
 /*
 INPUTS: command
 OUTPUTS: returns -1 on failure, 256 for an excption, or 0->255 if a halt occurs
@@ -30,7 +30,16 @@ asmlinkage int32_t execute (const uint8_t* command){
 		printf("Max processes used.\n");
 		return -1;
 	}
+	PCB_t * parent;
+	cur_pcb(parent);
+
+	uint32_t terminal_id = 	parent->terminal_id;
+
 	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB8 * (pid+1)); //get pcb to point to kernel
+	if(pid <= 2){
+		parent = pcb;
+		terminal_id = pid;
+	}
 	memset(pcb,0,sizeof(PCB_t));
 	pcb->pid = pid; //set member variables from current tss
 	if(pcb->pid == 0)
@@ -76,9 +85,9 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//Create PCB
 	
 
-	PCB_t * parent;
-	cur_pcb(parent);
+	
 	pcb->parent = parent;
+	pcb->terminal_id = terminal_id;
 	parent->esp0 = tss.esp0;
 
 	asm volatile("\
@@ -126,6 +135,8 @@ asmlinkage int32_t execute (const uint8_t* command){
 	asm volatile("movl %%eax, %0":"=r" (ret));
 	return ret;
 }
+
+
 /*
 INPUTS: status
 OUTPUTS: returns -1 on fail, 0 on success
@@ -152,7 +163,7 @@ asmlinkage int32_t halt (uint8_t status){
 	tss.esp0 = pcb->parent->esp0;
 	tss.ss0 = pcb->parent->ss0;
 	//change esp/ebp
-	if(pcb->pid == 0){
+	if(pcb->pid == pcb->parent->pid){
 		execute((uint8_t *)"shell");
 	}
 	asm volatile("\

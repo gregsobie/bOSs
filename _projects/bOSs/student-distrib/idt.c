@@ -236,5 +236,6 @@ void generic_handler()
 void pit_irq_handler()
 {
 	send_eoi(0);
+	sched();
  	asm volatile("leave;iret;");
 }
