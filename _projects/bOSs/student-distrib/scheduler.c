@@ -20,8 +20,8 @@ void sched(){
 
 
 	uint8_t * video = (uint8_t *) VIDEO;
-	video[(49 << 1)+1] ^= 0x30;
-	video[((50+pid)<<1) + 1] = 0x40;
+	video[(70 << 1)+1] ^= 0x30;
+	video[((70+1+pid)<<1) + 1] = 0x40;
 	
 
 	asm volatile("\
@@ -33,12 +33,12 @@ void sched(){
 
 	if(shells_started < 3){
 		shells_started++;
-		execute("shell");
+		execute((uint8_t *)"shell");
 	}
 	uint32_t next = get_next_proc(pid);
 	active[next] = false;
 	PCB_t * next_pcb = 	(PCB_t *)(KERNEL_TOP-KB8 * (next+1));
-	video[((50+next)<<1) + 1] = 0x20;
+	video[((70+1+next)<<1) + 1] = 0x20;
 	loadPageDirectory(proc_page_directory[next]);
 	//printf("%d -> %d\n",pcb->pid,next);
 	asm volatile("\
