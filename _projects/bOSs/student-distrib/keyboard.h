@@ -7,6 +7,7 @@
 
 #include "types.h"
 #include "filesystem.h"
+#include "paging.h"
 
 /* IO ports for each keyboard controller */
 #define KEYBOARD_ENCODER_IN_BUF	 0x60

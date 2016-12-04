@@ -53,7 +53,7 @@ uint8_t caps_lock_and_shift[128] =  {
 
  	typingLine = true;
  	line_buffer_index=0;
- 	cur_terminal = 1;
+ 	cur_terminal = 0;
  	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
  	keyboard_set_leds(numlock, scrolllock, capslock);
@@ -316,7 +316,27 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 	return bytes_written;
 }
 
+/* 
+ * INPUTS: term - number of terminal to switch to
+ * OUTPUTS: None
+ */
 void switch_terminals(uint8_t term)
 {
-	
+	/* If valid input */
+	if(term>=1 && term<=3 && cur_terminal!=term-1){
+		/* Save contents of the old terminal */
+		//printf("Switching Terminals\n");
+		uint32_t oldTerminal = VIDEO + (cur_terminal*ALIGNED_4KB);
+		memcpy((void*)oldTerminal, (void*)VIDEO, (uint32_t)ALIGNED_4KB); //copy page from physical video memory to terminal buffer
+		deactivateVideo(oldTerminal); 									 //set user video memory to respective terminal buffer
+
+		/* Get contents of the new terminal */
+		uint32_t newTerminal = VIDEO + ((term-1)*ALIGNED_4KB);
+		memcpy((void*)VIDEO, (void*)newTerminal, (uint32_t)ALIGNED_4KB); //copy terminal buffer into physical video memory
+		activateVideo(); 												 //set user video memory to physical video memory
+
+		/* Update the current terminal and cursor to reflect change */
+		cur_terminal=term-1;
+		move_csr(getX(),getY());
+	}
 }
