@@ -38,7 +38,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB8 * (pid+1)); //get pcb to point to kernel
 	if(pid <= 2){
 		parent = pcb;
-		terminal_id = pid;
+		terminal_id = pid +1;
 	}
 	memset(pcb,0,sizeof(PCB_t));
 	pcb->pid = pid; //set member variables from current tss
@@ -89,7 +89,8 @@ asmlinkage int32_t execute (const uint8_t* command){
 	pcb->parent = parent;
 	pcb->terminal_id = terminal_id;
 	parent->esp0 = tss.esp0;
-
+	active[pcb->parent->pid] = false;
+	active[pid] = true;
 	asm volatile("\
 		movl	%%ss,%2		\n\
 		movl	%%esp,%0 	\n\
@@ -158,7 +159,8 @@ asmlinkage int32_t halt (uint8_t status){
 		close(i);
 	}
 	proc_id_used[pcb->pid] = false;
-
+	active[pcb->pid] = false;
+	active[pcb->parent->pid] = true;
 	//Change TSS
 	tss.esp0 = pcb->parent->esp0;
 	tss.ss0 = pcb->parent->ss0;

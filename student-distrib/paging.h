@@ -5,7 +5,7 @@
 
 #define USER_MEM_LOCATION  (128 * 0x00100000)
 #define USER_PROG_LOCATION ((128 * 0x00100000) + 0x048000)
-#define MAX_USER_PROG      0x010
+#define MAX_USER_PROG      6
 
 #define FLAG_PRESENT       0x01
 #define FLAG_WRITE_ENABLE  0x02
