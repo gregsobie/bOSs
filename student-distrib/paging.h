@@ -19,6 +19,8 @@
 #define DIRECTORY_SIZE     1024
 #define VIDEO 0xB8000
 #define USER_VIDEO 0x08400000 
+#define ALIGNED_4KB 4096
+#define PAGE_4MB 	0x400000
 extern void loadPageDirectory(uint32_t *);
 extern void enablePaging();
 
@@ -31,5 +33,7 @@ uint32_t proc_video_tables[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
 
 static  uint8_t proc_id_used[MAX_USER_PROG] __attribute__((unused)) = {false};
 uint32_t is_kernel_ptr(const void * ptr);
+void deactivateVideo(uint32_t inactiveTerminal);
+void activateVideo();
 
 #endif
