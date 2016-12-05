@@ -3,25 +3,28 @@
 #include "i8259.h"
 #include "x86_desc.h"
 volatile uint8_t shells_started = 1;
+
 void init_PIT(){
 	//possibly configure pit for different frequencies?
 	enable_irq(0);
 
 }
 
+/*
+ *  Switches to the next active process. 
+ */
 void sched(){
 	cli();
-	uint32_t pid = -1;
 	PCB_t * pcb;
-
 	cur_pcb(pcb);
-	pid = pcb->pid;
+	uint32_t pid = pcb->pid;
+
 	active[pcb->pid] = true;
 
 
-	uint8_t * video = (uint8_t *) VIDEO;
-	video[(70 << 1)+1] ^= 0x30;
-	video[((70+1+pid)<<1) + 1] = 0x40;
+	//uint8_t * video = (uint8_t *) VIDEO;
+	//video[(70 << 1)+1] ^= 0x30;
+	//video[((70+1+pid)<<1) + 1] = 0x40;
 	
 
 	asm volatile("\
@@ -31,27 +34,33 @@ void sched(){
 		: 
 		:"memory"); //change segment registers 
 
+
+	//Make sure that our shells are started
 	if(shells_started < 3){
 		shells_started++;
 		execute((uint8_t *)"shell");
 	}
+
 	uint32_t next = get_next_proc(pid);
 	active[next] = false;
 	PCB_t * next_pcb = 	(PCB_t *)(KERNEL_TOP-KB8 * (next+1));
-	video[((70+1+next)<<1) + 1] = 0x20;
+	//video[((70+1+next)<<1) + 1] = 0x20;
 	loadPageDirectory(proc_page_directory[next]);
-	//printf("%d -> %d\n",pcb->pid,next);
-	tss.ss0 = KERNEL_DS;
-	tss.esp0 = KERNEL_TOP-KB8 * next -4;
+
+	tss.ss0 = KERNEL_CS;
+	tss.esp0 = KERNEL_TOP-KB8 * next - 4;
 	asm volatile("\
 		movl	%0,%%esp 	\n\
 		movl    %1,%%ebp"
 		:
 		: "r"(next_pcb->esp),"r"(next_pcb->ebp)\
 		: "memory" );
+	sti();
 }
 
-
+/*
+ *  Returns the pid of the next active process in round-robin order.
+ */
 uint32_t get_next_proc(uint32_t curr){
 	do {
 		curr++;		
@@ -60,3 +69,4 @@ uint32_t get_next_proc(uint32_t curr){
 	}while(!active[curr]);
 	return curr;
 }
+

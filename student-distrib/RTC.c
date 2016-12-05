@@ -1,7 +1,7 @@
 #include "RTC.h"
 #include "syscall.h"
-
-volatile int rtc_interrupt_occured;
+#include "types.h"
+volatile int rtc_interrupt_occured[3];
 
 /* Initializes RTC before it can take interrupts */
 void RTC_init()
@@ -39,16 +39,13 @@ void RTC_init()
 /* Handles RTC interrupts */
 void rtc_irq_handler()
 {
-
 	// Disable NMI and select Register C
 	outb(REGISTER_C, NMI);
 	// Throw away contents
 	inb(CMOS);
-	
-	//test_interrupts();
-	//*((char *)0xB8001) = 50 ^ *((char *)0xB8001);
-
-	rtc_interrupt_occured = 1;
+	int i;
+	for(i=0;i<3;i++)
+		rtc_interrupt_occured[i] = 1;
 
 	// Send end-of-interrupt signal
 	send_eoi(IRQ_NUM);
@@ -68,15 +65,15 @@ int32_t RTC_open(struct file * fp)
 /* Reads data from RTC device */
 int32_t RTC_read(struct file * fp, char * buff, uint32_t nbytes)
 {
+
 	cli();
-	rtc_interrupt_occured = 0; 
+	PCB_t * pcb;
+	cur_pcb(pcb);
+	uint32_t term = pcb->terminal_id;
+	rtc_interrupt_occured[term] = 0; 
 	sti();
 	// Waits for interrupt to occur
-	while(rtc_interrupt_occured == 0)
-	{
-		
-	}
-	//putc('1'); // Test
+	while(rtc_interrupt_occured[term] == 0);
 	return 0;
 }
 
