@@ -74,7 +74,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//obtain perm level from flags register?
 
 	//Change paging
-	proc_page_directory[pid][0] =  (uint32_t)video_page_tables[terminal_id] | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	proc_page_directory[pid][0] =  (uint32_t)video_page_table | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 	proc_page_directory[pid][1] = MB4 | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_GLOBAL;
 	proc_page_directory[pid][USER_MEM_LOCATION >> 22] = (KERNEL_TOP + MB4 * pid) | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT |FLAG_USER;
 

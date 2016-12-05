@@ -123,7 +123,7 @@ uint8_t caps_lock_and_shift[128] =  {
 	sets various flags. 
 
 	*/
- void key_irq_handler(){
+void key_irq_handler(){
 
  	/* Check scan codes */
  	//keyboard_ctrl_read_status
@@ -210,7 +210,7 @@ uint8_t caps_lock_and_shift[128] =  {
 			 	/* If X is at max column and Y is at max row,
 			 	 * shift all elements upward by one row */
 			 	if(terminals[cur_terminal].c_x == MAX_COL_INDEX && terminals[cur_terminal].c_y==MAX_ROW_INDEX)
-			 		scroll();
+			 		term_scroll(cur_terminal);
 			 	/* Another key has been pressed */
 			 	terminals[cur_terminal].line_buffer_index++;
 			}

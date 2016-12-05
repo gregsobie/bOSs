@@ -25,6 +25,7 @@ void move_csr(int cursor_x, int cursor_y);
 
 /* Scroll each line of terminal upward by one row */
 void scroll(void);
+void term_scroll(uint8_t term);
 
 /* Return current x-position */
 int getX(void);
