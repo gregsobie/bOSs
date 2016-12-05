@@ -23,7 +23,7 @@ void init_kernel_pd(){
 	}
 	for(i=0;i<3;i++){
 		term_video_tables[i][0] = (VIDEO + _4KB*(i+1)) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
-		video_page_table[(VIDEO >> 12)+i+1] = (VIDEO + _4KB*i+1) | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+		video_page_table[(VIDEO >> 12)+i+1] = (VIDEO + _4KB*(i+1)) | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 
 	}
 	term_video_tables[0][0] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
