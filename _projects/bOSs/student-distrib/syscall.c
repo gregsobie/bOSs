@@ -4,8 +4,8 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "RTC.h"
-#include "keyboard.h"
 #include "scheduler.h"
+#include "keyboard.h"
 /*
 INPUTS: command
 OUTPUTS: returns -1 on failure, 256 for an excption, or 0->255 if a halt occurs
@@ -38,7 +38,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	PCB_t * pcb = (PCB_t *)(KERNEL_TOP-KB8 * (pid+1)); //get pcb to point to kernel
 	if(pid <= 2){
 		parent = pcb;
-		terminal_id = pid +1;
+		terminal_id = pid;
 	}
 	memset(pcb,0,sizeof(PCB_t));
 	pcb->pid = pid; //set member variables from current tss
@@ -74,7 +74,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//obtain perm level from flags register?
 
 	//Change paging
-	proc_page_directory[pid][0] =  (uint32_t)video_page_table | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	proc_page_directory[pid][0] =  (uint32_t)video_page_tables[terminal_id] | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 	proc_page_directory[pid][1] = MB4 | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_GLOBAL;
 	proc_page_directory[pid][USER_MEM_LOCATION >> 22] = (KERNEL_TOP + MB4 * pid) | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT |FLAG_USER;
 

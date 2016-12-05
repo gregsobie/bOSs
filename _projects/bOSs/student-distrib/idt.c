@@ -9,6 +9,7 @@
 #include "types.h"
 #include "syscall_linkage.h"
 #include "syscall.h"
+#include "scheduler.h"
 void initialize_idt()
 {
 	int i;

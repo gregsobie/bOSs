@@ -6,10 +6,9 @@
 #include "lib.h"
 #include "x86_desc.h"
 #include "i8259.h"
+#include "paging.h"
 
 bool numlock, scrolllock, capslock, left_shift, right_shift, alt, ctrl;
-volatile bool typingLine;
-int cur_terminal;
 
 /* Character data corresponding to make codes, where
  * Zero denotes an unprintable character */
@@ -51,8 +50,14 @@ uint8_t caps_lock_and_shift[128] =  {
  	/* Set shift, ctrl, and alt keys */
  	left_shift = right_shift = alt = ctrl = false;
 
- 	typingLine = true;
- 	line_buffer_index=0;
+ 	int i;
+ 	for(i=0;i<3;i++){
+ 		terminals[i].typingLine = true;
+ 		terminals[i].line_buffer_index=0;
+ 		terminals[i].c_x = 0;
+ 		terminals[i].c_y = 0;
+ 		terminals[i].video_mem = (char *)(VIDEO+4096*(i+1));
+ 	}
  	cur_terminal = 0;
  	/* Set lock keys and LED lights */
  	numlock = scrolllock = capslock = false;
@@ -119,6 +124,7 @@ uint8_t caps_lock_and_shift[128] =  {
 
 	*/
  void key_irq_handler(){
+
  	/* Check scan codes */
  	//keyboard_ctrl_read_status
  	/* Mask interrupts */
@@ -150,39 +156,39 @@ uint8_t caps_lock_and_shift[128] =  {
  			scrolllock = !scrolllock;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
  			/* Input line must end with a linefeed character */
- 			line_buffer[cur_terminal][line_buffer_index] = KEYBOARD_LINEFEED;
- 			typingLine = false;
+ 			terminals[cur_terminal].line_buffer[terminals[cur_terminal].line_buffer_index] = KEYBOARD_LINEFEED;
+ 			terminals[cur_terminal].typingLine = false;
  			/* If located at max row, move all other entries upward */
- 			if(getY() == MAX_ROW_INDEX){
+ 			if(terminals[cur_terminal].c_y == MAX_ROW_INDEX){
  				scroll();
- 			 	move_csr(0,getY());
+ 			 	move_csr(0,terminals[cur_terminal].c_y);
  			/* Else move current entry to next row */
  			}else
-			 	move_csr(0,getY()+1);
+			 	move_csr(0,terminals[cur_terminal].c_y+1);
 		/* Deletes the last typed character and updates the
 		 * line input buffer to reflect element's absense */
  		}else if(keyboard_scancode == KEYBOARD_BACKSPACE){
- 			if(line_buffer_index > 0){
+ 			if(terminals[cur_terminal].line_buffer_index > 0){
  				delete_char();
- 				line_buffer_index--;
+ 				terminals[cur_terminal].line_buffer_index--;
  			}
  		/* Resets the terminal by clearing screen, setting cursor
  		 * to original position, and clearing input line buffer */
  		}else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
- 				clear();
+ 				term_clear(cur_terminal);
  				move_csr(0,0);
- 				while(line_buffer_index > 0)
- 					line_buffer[cur_terminal][line_buffer_index--] = '\0';
- 				line_buffer_index = 0;
+ 				while(terminals[cur_terminal].line_buffer_index > 0)
+ 					terminals[cur_terminal].line_buffer[terminals[cur_terminal].line_buffer_index--] = '\0';
+ 				terminals[cur_terminal].line_buffer_index = 0;
  		}else if(alt && keyboard_scancode == F1CODE){
- 				switch_terminals(1);
+ 				switch_terminals(0);
  		}else if(alt && keyboard_scancode == F2CODE){
- 				switch_terminals(2);
+ 				switch_terminals(1);
  		}else if(alt && keyboard_scancode == F3CODE){
- 				switch_terminals(3);
+ 				switch_terminals(2);
  		}else{
  			/* If input line buffer is not full */
- 			if(line_buffer_index < MAX_BUF_INDEX){
+ 			if(terminals[cur_terminal].line_buffer_index < MAX_BUF_INDEX){
 	 			/* Grab the proper character, depending on the modifier keys. */
 	 			/* Both caps lock and shift are active */
 			 	if(capslock & (left_shift | right_shift)){
@@ -198,14 +204,15 @@ uint8_t caps_lock_and_shift[128] =  {
 			 			keyboard_character = keyboard_chars[keyboard_scancode];
 			 	}
 			 	/* Store character to input line buffer and echo to terminal */
-			 	line_buffer[cur_terminal][line_buffer_index] = keyboard_character;
-			 	terminal_write(NULL, line_buffer[cur_terminal] + line_buffer_index, BYTE_PER_CHAR);
+			 	terminals[cur_terminal].line_buffer[terminals[cur_terminal].line_buffer_index] = keyboard_character;
+			 	term_putc(keyboard_character,cur_terminal);
+				move_csr(terminals[cur_terminal].c_x,terminals[cur_terminal].c_y);
 			 	/* If X is at max column and Y is at max row,
 			 	 * shift all elements upward by one row */
-			 	if(getX() == MAX_COL_INDEX && getY()==MAX_ROW_INDEX)
+			 	if(terminals[cur_terminal].c_x == MAX_COL_INDEX && terminals[cur_terminal].c_y==MAX_ROW_INDEX)
 			 		scroll();
 			 	/* Another key has been pressed */
-			 	line_buffer_index++;
+			 	terminals[cur_terminal].line_buffer_index++;
 			}
  		}
 	/* Key is released */
@@ -264,28 +271,31 @@ takes buffer passed in, and copies from line_buffer into the terminal buffer
 
 
 int32_t terminal_read(struct file * f, char * buf, uint32_t nbytes){
+	
+	PCB_t * current;
+	cur_pcb(current);
 	char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 		return -1;
 	/* Wait until enter key has been pressed */
-	while(typingLine);
+	while(terminals[current->terminal_id].typingLine);
 	/* Any key pressed after enter should be
 	 * a part of the next line */
-	typingLine = true;
+	terminals[current->terminal_id].typingLine = true;
 	/* We will read at most 128 bytes per line */
-	if(nbytes > line_buffer_index+1)
-		nbytes = line_buffer_index+1;
+	if(nbytes > terminals[current->terminal_id].line_buffer_index+1)
+		nbytes = terminals[current->terminal_id].line_buffer_index+1;
 	/* Copy from line_buffer into terminal_buffer */
 	int32_t i;
 	for(i=0; i<nbytes; i++){
-		terminal_buffer[i] = line_buffer[cur_terminal][i];
+		terminal_buffer[i] = terminals[current->terminal_id].line_buffer[i];
 	}
 	terminal_buffer[i] = '\0';
 	/* Reset input line buffer index */
 	for(i=0; i<nbytes; i++){
-		line_buffer[cur_terminal][i] = '\0';
+		terminals[current->terminal_id].line_buffer[i] = '\0';
 	}
- 	line_buffer_index=0;
+ 	terminals[current->terminal_id].line_buffer_index=0;
 	return (strlen((int8_t*)terminal_buffer));
 }
 
@@ -298,6 +308,9 @@ takes buffer passed in, and outputs to terminal and update cursor
 
 */
 int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
+	PCB_t * current;
+	cur_pcb(current);
+
 	volatile char* terminal_buffer = (char*)buf;
 	if(terminal_buffer==NULL)
 			return -1;
@@ -311,7 +324,8 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 		putc(terminal_buffer[i]);
 		bytes_written++;
 	}
-	move_csr(getX(),getY());
+	if(current->terminal_id == cur_terminal)
+		move_csr(terminals[current->terminal_id].c_x,terminals[current->terminal_id].c_y);
 	sti();
 	return bytes_written;
 }
@@ -323,20 +337,20 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 void switch_terminals(uint8_t term)
 {
 	/* If valid input */
-	if(term>=1 && term<=3 && cur_terminal!=term-1){
+	if(term>=0 && term<3 && cur_terminal!=term){
 		/* Save contents of the old terminal */
 		//printf("Switching Terminals\n");
-		uint32_t oldTerminal = VIDEO + (cur_terminal*ALIGNED_4KB);
+		uint32_t oldTerminal = terminals[cur_terminal].video_mem;
 		memcpy((void*)oldTerminal, (void*)VIDEO, (uint32_t)ALIGNED_4KB); //copy page from physical video memory to terminal buffer
 		deactivateVideo(oldTerminal); 									 //set user video memory to respective terminal buffer
 
 		/* Get contents of the new terminal */
-		uint32_t newTerminal = VIDEO + ((term-1)*ALIGNED_4KB);
+		uint32_t newTerminal = terminals[term].video_mem;
 		memcpy((void*)VIDEO, (void*)newTerminal, (uint32_t)ALIGNED_4KB); //copy terminal buffer into physical video memory
 		activateVideo(); 												 //set user video memory to physical video memory
 
 		/* Update the current terminal and cursor to reflect change */
-		cur_terminal=term-1;
-		move_csr(getX(),getY());
+		cur_terminal=term;
+		//move_csr(getX(),getY());
 	}
 }

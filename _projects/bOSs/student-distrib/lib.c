@@ -3,15 +3,11 @@
  */
 
 #include "lib.h"
+#include "keyboard.h"
 #define VIDEO 0xB8000
 #define NUM_COLS 80
 #define NUM_ROWS 25
 #define ATTRIB 0x7
-
-static int screen_x;
-static int screen_y;
-static int screen_scroll;
-static char* video_mem = (char *)VIDEO;
 
 /*
 * void clear(void);
@@ -22,29 +18,45 @@ static char* video_mem = (char *)VIDEO;
 void
 clear(void)
 {
+	PCB_t * current;
+	cur_pcb(current);
     int32_t i;
     for(i=0; i<(NUM_ROWS*NUM_COLS); i++) {
-        *(uint8_t *)(video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1) + 1) = ATTRIB;
     }
-    screen_x=0;
-    screen_y=0;
-    screen_scroll=0;
-    move_csr(screen_x, screen_y);
-}
 
+    terminals[current->terminal_id].c_x=0;
+    terminals[current->terminal_id].c_y=0;
+    move_csr(terminals[current->terminal_id].c_x, terminals[current->terminal_id].c_y);
+}
+void
+term_clear(uint8_t term)
+{
+    int32_t i;
+    for(i=0; i<(NUM_ROWS*NUM_COLS); i++) {
+        *(uint8_t *)(terminals[term].video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(terminals[term].video_mem + (i << 1) + 1) = ATTRIB;
+    }
+
+    terminals[term].c_x=0;
+    terminals[term].c_y=0;
+    move_csr(terminals[term].c_x, terminals[term].c_y);
+}
 /* Removes a character from the console by replacing
  * with a space character and updating location */
 void delete_char(){
-	    *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1)) = ' ';
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x -1) << 1) + 1) = ATTRIB;
-        screen_x--;
-         /*Ensures valid index: 0 <= screen_x < NUM_COLS */
-        screen_x %= NUM_COLS;
-        /* Decrement row if x index went negative */
-        if(screen_x==NUM_COLS-1)
-        	screen_y--;
-        move_csr(screen_x, screen_y);
+	PCB_t * current;
+	cur_pcb(current);
+    *(uint8_t *)(terminals[current->terminal_id].video_mem + ((NUM_COLS*terminals[current->terminal_id].c_y + terminals[current->terminal_id].c_x -1) << 1)) = ' ';
+    *(uint8_t *)(terminals[current->terminal_id].video_mem + ((NUM_COLS*terminals[current->terminal_id].c_y + terminals[current->terminal_id].c_x -1) << 1) + 1) = ATTRIB;
+    terminals[current->terminal_id].c_x--;
+     /*Ensures valid index: 0 <= screen_x < NUM_COLS */
+    terminals[current->terminal_id].c_x %= NUM_COLS;
+    /* Decrement row if x index went negative */
+    if(terminals[current->terminal_id].c_x==NUM_COLS-1)
+    	terminals[current->terminal_id].c_y--;
+    move_csr(terminals[current->terminal_id].c_x, terminals[current->terminal_id].c_y);
 }
 
 /* Updates the hardware cursor: the little blinking line
@@ -54,13 +66,13 @@ void delete_char(){
 void move_csr(int cursor_x, int cursor_y)
 {
     unsigned temp;
-    screen_x=cursor_x;
-    screen_y=cursor_y;
+    terminals[cur_terminal].c_x=cursor_x;
+    terminals[cur_terminal].c_y=cursor_y;
 
     /* The equation for finding the index in a linear
     *  chunk of memory can be represented by:
     *  Index = [(y * width) + x] */
-     temp = cursor_y * NUM_COLS + cursor_x;
+    temp = cursor_y * NUM_COLS + cursor_x;
 
     //  This sends a command to indicies 14 and 15 in the
     // *  CRT Control Register of the VGA controller. These
@@ -84,39 +96,19 @@ Resets typing / screen to top left corner. Similar to clear
 */
 void scroll(void)
 {
+	PCB_t * current;
+	cur_pcb(current);
     int32_t i;
     /* For each row, rewrite at 1 row above current location */
     for(i=0; i<(NUM_ROWS - 1)*NUM_COLS; i++){
-        *(uint8_t *)(video_mem + (i << 1)) = *(uint8_t *)(video_mem + ((i + NUM_COLS) << 1));
-        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1)) = *(uint8_t *)(terminals[current->terminal_id].video_mem + ((i + NUM_COLS) << 1));
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1) + 1) = ATTRIB;
     }
     /* Clear next line */
     for(i=(NUM_ROWS - 1)*NUM_COLS; i<NUM_ROWS*NUM_COLS; i++){
-        *(uint8_t *)(video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1) + 1) = ATTRIB;
     }
-}
-
-/*
-INPUTS: none
-OUTPUTS: return current screen y-position
-
-
-
-*/
-int getY(){
-	return screen_y;
-}
-
-/*
-INPUTS: none
-OUTPUTS: return current screen s-position
-
-
-
-*/
-int getX(){
-	return screen_x;
 }
 
 /* Standard printf().
@@ -140,6 +132,8 @@ int getX(){
 int32_t
 printf(int8_t *format, ...)
 {
+	PCB_t * current;
+	cur_pcb(current);
 	/* Pointer to the format string */
 	int8_t* buf = format;
 
@@ -256,12 +250,14 @@ format_char_switch:
 int32_t
 puts(int8_t* s)
 {
+	PCB_t * current;
+	cur_pcb(current);
 	register int32_t index = 0;
 	while(s[index] != '\0') {
 		putc(s[index]);
 		index++;
 	}
-	move_csr(screen_x, screen_y);
+	move_csr(terminals[current->terminal_id].c_x, terminals[current->terminal_id].c_y);
 	return index;
 }
 
@@ -274,26 +270,55 @@ puts(int8_t* s)
 void
 putc(uint8_t c)
 {
+	PCB_t * current;
+	cur_pcb(current);
 	/* If new line or return character is output to console,
 	 * update current position */
     if(c == '\n' || c == '\r'){
-        screen_y++;
-        screen_x=0;
+        terminals[current->terminal_id].c_y++;
+        terminals[current->terminal_id].c_x=0;
     /* Else print the character to the console */
     }else{
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
-        screen_x++;
-        screen_y += screen_x / NUM_COLS;
-    	screen_x %= NUM_COLS;
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + ((NUM_COLS*terminals[current->terminal_id].c_y + terminals[current->terminal_id].c_x) << 1)) = c;
+        *(uint8_t *)(terminals[current->terminal_id].video_mem + ((NUM_COLS*terminals[current->terminal_id].c_y + terminals[current->terminal_id].c_x) << 1) + 1) = ATTRIB;
+        terminals[current->terminal_id].c_x++;
+        terminals[current->terminal_id].c_y += terminals[current->terminal_id].c_x / NUM_COLS;
+    	terminals[current->terminal_id].c_x %= NUM_COLS;
     }
     /* If current row falls off screen, adjust for visibility */
-    if(screen_y == NUM_ROWS){
-        screen_y--;
+    if(terminals[current->terminal_id].c_y == NUM_ROWS){
+        terminals[current->terminal_id].c_y--;
         scroll();
     }
 }
-
+/*
+* void putc(uint8_t c);
+*   Inputs: uint_8* c = character to print
+*   Return Value: void
+*	Function: Output a character to the console 
+*/
+void
+term_putc(uint8_t c,uint8_t term)
+{
+	/* If new line or return character is output to console,
+	 * update current position */
+    if(c == '\n' || c == '\r'){
+        terminals[term].c_y++;
+        terminals[term].c_x=0;
+    /* Else print the character to the console */
+    }else{
+        *(uint8_t *)(terminals[term].video_mem + ((NUM_COLS*terminals[term].c_y + terminals[term].c_x) << 1)) = c;
+        *(uint8_t *)(terminals[term].video_mem + ((NUM_COLS*terminals[term].c_y + terminals[term].c_x) << 1) + 1) = ATTRIB;
+        terminals[term].c_x++;
+        terminals[term].c_y += terminals[term].c_x / NUM_COLS;
+    	terminals[term].c_x %= NUM_COLS;
+    }
+    /* If current row falls off screen, adjust for visibility */
+    if(terminals[term].c_y == NUM_ROWS){
+        terminals[term].c_y--;
+        scroll();
+    }
+}
 /*
 * int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
 *   Inputs: uint32_t value = number to convert
@@ -653,11 +678,11 @@ strncpy(int8_t* dest, const int8_t* src, uint32_t n)
 *	Function: increments video memory. To be used to test rtc
 */
 
-void
-test_interrupts(void)
-{
-	int32_t i;
-	for (i=0; i < NUM_ROWS*NUM_COLS; i++) {
-		video_mem[i<<1]++;
-	}
-}
+// void
+// test_interrupts(void)
+// {
+// 	int32_t i;
+// 	for (i=0; i < NUM_ROWS*NUM_COLS; i++) {
+// 		terminals[term].video_mem[i<<1]++;
+// 	}
+// }
