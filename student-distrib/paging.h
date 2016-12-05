@@ -33,7 +33,7 @@ uint32_t video_page_table[1024] __attribute__((aligned(4096)));
 uint32_t proc_page_directory[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
 uint32_t term_video_tables[3][1024]__attribute__((aligned(4096)));
 
-static  uint8_t proc_id_used[MAX_USER_PROG] __attribute__((unused)) = {false};
+uint8_t proc_id_used[MAX_USER_PROG] __attribute__((unused));
 uint32_t is_kernel_ptr(const void * ptr);
 
 

@@ -2,6 +2,9 @@
 #include "syscall.h"
 #include "i8259.h"
 #include "x86_desc.h"
+#include "paging.h"
+#include "lib.h"
+
 volatile uint8_t shells_started = 1;
 
 void init_PIT(){
@@ -22,11 +25,6 @@ void sched(){
 	active[pcb->pid] = true;
 
 
-	//uint8_t * video = (uint8_t *) VIDEO;
-	//video[(70 << 1)+1] ^= 0x30;
-	//video[((70+1+pid)<<1) + 1] = 0x40;
-	
-
 	asm volatile("\
 		movl	%%esp,%0 	\n\
 		movl    %%ebp, %1"
@@ -42,12 +40,10 @@ void sched(){
 	}
 
 	uint32_t next = get_next_proc(pid);
-	active[next] = false;
+	show_status();
 	PCB_t * next_pcb = 	(PCB_t *)(KERNEL_TOP-KB8 * (next+1));
-	//video[((70+1+next)<<1) + 1] = 0x20;
 	loadPageDirectory(proc_page_directory[next]);
-
-	tss.ss0 = KERNEL_CS;
+	tss.ss0 = KERNEL_DS;
 	tss.esp0 = KERNEL_TOP-KB8 * next - 4;
 	asm volatile("\
 		movl	%0,%%esp 	\n\
@@ -70,3 +66,20 @@ uint32_t get_next_proc(uint32_t curr){
 	return curr;
 }
 
+void show_status(){
+	uint8_t * video = (uint8_t *) VIDEO;
+	int i;
+	for(i=0;i<MAX_USER_PROG;i++){
+		if(proc_id_used[i] == true){
+			if(active[i]){
+				video[((NUM_COLS-MAX_USER_PROG + i)<<1)+1] = 0x20;
+
+			}else{
+				video[((NUM_COLS-MAX_USER_PROG + i)<<1)+1] = 0x40;
+
+			}
+		}else{
+			video[((NUM_COLS-MAX_USER_PROG + i)<<1)+1] = ATTRIB;
+		} 
+	}
+}
