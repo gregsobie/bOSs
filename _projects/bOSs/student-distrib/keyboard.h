@@ -46,6 +46,8 @@
 #define F1CODE				 0x3B
 #define F2CODE				 0x3C
 #define F3CODE				 0x3D
+#define UPCODE 				 0x48
+#define DOWNCODE 			 0x50
 
  /*Helpful constants*/
  #define MAX_COL_INDEX 	79
@@ -60,16 +62,18 @@
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
 typedef struct terminal{
+	char cmd_hist[5][LINE_BUF_SIZE]; //arbitrarily store the 5 most recent commands
 	char line_buffer[LINE_BUF_SIZE];
 	uint32_t line_buffer_index;
 	bool typingLine;
 	uint32_t c_x;
 	uint32_t c_y;
+	uint8_t cmdCount;
 	char* video_mem;
 } terminal_t;
 uint8_t cur_terminal;
 
-volatile terminal_t terminals[3]; 
+volatile terminal_t terminals[3];
 
 /* Prepares driver for use */
 extern void keyboard_install(int irq);

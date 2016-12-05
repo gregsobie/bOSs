@@ -17,7 +17,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//Obtain PID
 	if(command == NULL)
 		return -1;
-	int i;
+	int i,j;
 	uint32_t pid = -1;
 	for(i=0;i<MAX_USER_PROG;i++){    //set process id, if == -1, max processes
 		if(proc_id_used[i] == false){
@@ -62,6 +62,23 @@ asmlinkage int32_t execute (const uint8_t* command){
 		proc_id_used[pid] = false;
 		return -1;
 	}
+
+
+	/* *** EDITS 5th DECEMBER BELOW -- Command History *** */
+	/* Advance old cmds by one to make space for the new cmd */
+	for(i=4; i>0; i--){
+		for(j=0; j<LINE_BUF_SIZE; j++)
+			terminals[terminal_id].cmd_hist[i][j] = terminals[terminal_id].cmd_hist[i-1][j];
+	}
+	/* Store each character of cmd name into first entry of terminal's cmd_hist */
+	i=0;
+	while(i<MAX_BUF_INDEX){
+		terminals[terminal_id].cmd_hist[0][i] = command[i];
+		i++;
+	}
+	/* *** EDITS 5th DECEMBER ABOVE -- Command History *** */
+
+
 	uint8_t head[40];
 	read_data (d.inode, 0, head, 40); //ELF check 
 	if(head[0] != ELF_MAGIC_0 || head[1] != 'E' || head[2] != 'L' || head[3] != 'F'){
