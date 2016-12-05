@@ -14,8 +14,6 @@ Separate file for assembly linkage of interrupt handlers causing double inclusio
 -	Found by Arnav, fixed by Brandon
 
 
-
-
 RTC seems to not get set to the correct frequencies
 	Frequency was being written into Register A instead of the rate 
 -	Found by Mohammed, fixed by Mohammed
