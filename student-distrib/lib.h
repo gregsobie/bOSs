@@ -8,6 +8,7 @@
 #include "types.h"
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
+void term_putc(uint8_t c,uint8_t term);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
@@ -15,7 +16,7 @@ uint32_t strlen(const int8_t* s);
 
 /* Clears video memory */
 void clear(void);
-
+void term_clear(uint8_t term);
 /* Deletes a typed character from appearing on the console */
 void delete_char(void);
 

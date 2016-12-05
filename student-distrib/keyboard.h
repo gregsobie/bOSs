@@ -7,7 +7,6 @@
 
 #include "types.h"
 #include "filesystem.h"
-#include "paging.h"
 
 /* IO ports for each keyboard controller */
 #define KEYBOARD_ENCODER_IN_BUF	 0x60
@@ -60,9 +59,17 @@
 
 /* Stores the current state of certain keys */
 //bool numlock, scrolllock, capslock, shift, alt, ctrl, typingLine;
-extern uint8_t _lastScanCode;
-char line_buffer[3][128];
-volatile int line_buffer_index;
+typedef struct terminal{
+	char line_buffer[LINE_BUF_SIZE];
+	uint32_t line_buffer_index;
+	bool typingLine;
+	uint32_t c_x;
+	uint32_t c_y;
+	char* video_mem;
+} terminal_t;
+uint8_t cur_terminal;
+
+volatile terminal_t terminals[3]; 
 
 /* Prepares driver for use */
 extern void keyboard_install(int irq);

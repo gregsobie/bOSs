@@ -20,6 +20,8 @@
 #define VIDEO 0xB8000
 #define USER_VIDEO 0x08400000 
 #define ALIGNED_4KB 4096
+
+#define _4KB 4096
 #define PAGE_4MB 	0x400000
 extern void loadPageDirectory(uint32_t *);
 extern void enablePaging();
@@ -27,7 +29,7 @@ extern void enablePaging();
 void init_kernel_pd();
 
 uint32_t kernel_page_directory[1024] __attribute__((aligned(4096)));
-uint32_t video_page_table[1024] __attribute__((aligned(4096)));
+uint32_t video_page_tables[3][1024] __attribute__((aligned(4096)));
 uint32_t proc_page_directory[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
 uint32_t proc_video_tables[MAX_USER_PROG][1024]__attribute__((aligned(4096)));
 
