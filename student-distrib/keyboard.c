@@ -160,7 +160,7 @@ void key_irq_handler(){
  			terminals[cur_terminal].typingLine = false;
  			/* If located at max row, move all other entries upward */
  			if(terminals[cur_terminal].c_y == MAX_ROW_INDEX){
- 				scroll();
+ 				term_scroll(cur_terminal);
  			 	move_csr(0,terminals[cur_terminal].c_y);
  			/* Else move current entry to next row */
  			}else
@@ -321,7 +321,9 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
 	for(i=0; i<nbytes; i++){
 		if(terminal_buffer[i] == '\0')
 			break;
-		putc(terminal_buffer[i]);
+	if(current->terminal_id == cur_terminal)
+		term_putc(terminal_buffer[i], cur_terminal);
+	else putc(terminal_buffer[i]);
 		bytes_written++;
 	}
 	if(current->terminal_id == cur_terminal)
@@ -360,7 +362,7 @@ void switch_terminals(uint8_t term)
 		loadPageDirectory(proc_page_directory[current->pid]);
 		/* Update the current terminal and cursor to reflect change */
 		cur_terminal=term;
-		//move_csr(getX(),getY());
+		move_csr(terminals[cur_terminal].c_x, terminals[cur_terminal].c_y);
 	}
 	sti();
 }

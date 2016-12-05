@@ -127,6 +127,14 @@ void scroll(void)
         *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
+
+/*
+INPUTS: term - terminal we want to scroll
+OUTPUTS: None
+
+Resets typing / screen to top left corner of specified terminal. Similar to clear 
+
+*/
 void term_scroll(uint8_t term){
     int32_t i;
     /* For each row, rewrite at 1 row above current location */

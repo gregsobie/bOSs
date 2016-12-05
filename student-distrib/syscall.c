@@ -349,7 +349,7 @@ asmlinkage int32_t vidmap (uint8_t** screen_start)
 
 	PCB_t * current;
 	cur_pcb(current);
-	proc_page_directory[current->pid][USER_VIDEO >> 22] = (uint32_t)(&(term_video_tables[current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+	proc_page_directory[current->pid][USER_VIDEO >> 22] = (uint32_t)(&(term_video_tables[current->terminal_id][current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
 	loadPageDirectory(proc_page_directory[current->pid]);
 	return 0;
 }
