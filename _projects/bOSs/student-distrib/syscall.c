@@ -13,7 +13,7 @@ OUTPUTS: returns -1 on failure, 256 for an excption, or 0->255 if a halt occurs
 enters userspace, pages memory for process, context switch, etc
 */
 asmlinkage int32_t execute (const uint8_t* command){
-    asm volatile("cli"); //clear interrupts
+	cli();
 	//Obtain PID
 	if(command == NULL)
 		return -1;
@@ -349,9 +349,8 @@ asmlinkage int32_t vidmap (uint8_t** screen_start)
 
 	PCB_t * current;
 	cur_pcb(current);
-	proc_page_directory[current->pid][USER_VIDEO >> 22] = (uint32_t)(&(proc_video_tables[current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
-	proc_video_tables[current->pid][0] =  VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
-
+	proc_page_directory[current->pid][USER_VIDEO >> 22] = (uint32_t)(&(term_video_tables[current->pid])) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+	loadPageDirectory(proc_page_directory[current->pid]);
 	return 0;
 }
 asmlinkage int32_t set_handler (int32_t signum, void* handler_address){

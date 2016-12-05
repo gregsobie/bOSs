@@ -336,21 +336,31 @@ int32_t terminal_write(struct file * f, const char* buf, uint32_t nbytes){
  */
 void switch_terminals(uint8_t term)
 {
+	cli();
+	PCB_t * current;
+	cur_pcb(current);
 	/* If valid input */
-	if(term>=0 && term<3 && cur_terminal!=term){
+	if(term<3 && cur_terminal!=term){
 		/* Save contents of the old terminal */
 		//printf("Switching Terminals\n");
-		uint32_t oldTerminal = terminals[cur_terminal].video_mem;
-		memcpy((void*)oldTerminal, (void*)VIDEO, (uint32_t)ALIGNED_4KB); //copy page from physical video memory to terminal buffer
-		deactivateVideo(oldTerminal); 									 //set user video memory to respective terminal buffer
+		video_page_table[(VIDEO >> 12)+cur_terminal+1] = (uint32_t)terminals[cur_terminal].video_mem  | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+		term_video_tables[cur_terminal][0] = (uint32_t)terminals[cur_terminal].video_mem | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+
+		loadPageDirectory(proc_page_directory[current->pid]);
+
+		char * oldTerminal = terminals[cur_terminal].video_mem;
+		memcpy((void*)oldTerminal, (void*)VIDEO, ALIGNED_4KB); //copy page from physical video memory to terminal buffer
 
 		/* Get contents of the new terminal */
-		uint32_t newTerminal = terminals[term].video_mem;
-		memcpy((void*)VIDEO, (void*)newTerminal, (uint32_t)ALIGNED_4KB); //copy terminal buffer into physical video memory
-		activateVideo(); 												 //set user video memory to physical video memory
+		char * newTerminal = terminals[term].video_mem;
+		memcpy((void*)VIDEO, (void*)newTerminal, ALIGNED_4KB); //copy terminal buffer into physical video memory
 
+		term_video_tables[term][0] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+		video_page_table[(VIDEO >> 12)+term+1] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+		loadPageDirectory(proc_page_directory[current->pid]);
 		/* Update the current terminal and cursor to reflect change */
 		cur_terminal=term;
 		//move_csr(getX(),getY());
 	}
+	sti();
 }

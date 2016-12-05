@@ -1,7 +1,7 @@
 #include "scheduler.h"
 #include "syscall.h"
 #include "i8259.h"
-
+#include "x86_desc.h"
 volatile uint8_t shells_started = 1;
 void init_PIT(){
 	//possibly configure pit for different frequencies?
@@ -41,6 +41,7 @@ void sched(){
 	video[((70+1+next)<<1) + 1] = 0x20;
 	loadPageDirectory(proc_page_directory[next]);
 	//printf("%d -> %d\n",pcb->pid,next);
+	tss.esp0 = next_pcb->esp0;
 	asm volatile("\
 		movl	%0,%%esp 	\n\
 		movl    %1,%%ebp"

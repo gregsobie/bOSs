@@ -21,6 +21,12 @@ void init_kernel_pd(){
 		//set the vid mem page
 	    video_page_table[i] = FLAG_WRITE_ENABLE;
 	}
+	for(i=0;i<3;i++){
+		term_video_tables[i][0] = (VIDEO + _4KB*(i+1)) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+
+	}
+	term_video_tables[0][0] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+
 	video_page_table[VIDEO >> 12] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 
 	/* Set the next three entries in the video page table to support multiple terminal functionality */
@@ -75,38 +81,5 @@ void loadPageDirectory(unsigned int* pd){
 
 uint32_t is_kernel_ptr(const void * ptr){
 	return (uint32_t)ptr < 0x00800000; 
-}
-
-/* 
- * INPUTS: inactiveTerminal - buffer to assign user video memory
- * OUTPUTS: None
- * Sets user video memory to respective terminal buffer, so that
- * the data is not lost when it becomes active again
- */
-void deactivateVideo(uint32_t inactiveTerminal){
-	// //printf("deactive\n");
-	// proc_video_tables[0][0] = inactiveTerminal | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-	// //loadPageDirectory(&proc_page_directory[0][0]);
-
-	// PCB_t * current;
-	// cur_pcb(current);
-	// video_page_table[(VIDEO>>22) + current->terminal_id] = inactiveTerminal | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
-}
-
-/* 
- * INPUTS: None
- * OUTPUTS: None
- * Sets user video memory to physical video memory. Note that user video
- * memory has already been populated with the new terminal's data before
- * this function is called
- */
-void activateVideo(){
-	// //printf("active\n");
-	// proc_video_tables[0][0] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-	// //loadPageDirectory(&proc_page_directory[0][0]);
-
-	// PCB_t * current;
-	// cur_pcb(current);
-	// video_page_table[(VIDEO>>22) + current->terminal_id] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
 }
 
