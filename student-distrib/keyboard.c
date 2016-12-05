@@ -56,6 +56,7 @@ uint8_t caps_lock_and_shift[128] =  {
  		terminals[i].line_buffer_index=0;
  		terminals[i].c_x = 0;
  		terminals[i].c_y = 0;
+ 		terminals[i].cmdCount = 0;
  		terminals[i].video_mem = (char *)(VIDEO+4096*(i+1));
  	}
  	cur_terminal = 0;
@@ -155,6 +156,7 @@ void key_irq_handler(){
  		else if(keyboard_scancode == KEYBOARD_SCROLL_LOCK)
  			scrolllock = !scrolllock;
  		else if(keyboard_scancode == KEYBOARD_ENTER){
+ 			terminals[cur_terminal].cmdCount=0;
  			/* Input line must end with a linefeed character */
  			terminals[cur_terminal].line_buffer[terminals[cur_terminal].line_buffer_index] = KEYBOARD_LINEFEED;
  			terminals[cur_terminal].typingLine = false;
@@ -172,6 +174,92 @@ void key_irq_handler(){
  				term_delete_char(cur_terminal);
  				terminals[cur_terminal].line_buffer_index--;
  			}
+ 		/* Command history -- previous */
+ 		}else if(keyboard_scancode == UPCODE){
+ 				/* Clear next line */
+ 			 	int i;
+    			term_putc(' ', cur_terminal);
+    			i=0;
+ 				while(!(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i] == ' ' && 
+ 					  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i+1] == ' ') &&
+ 					  !(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i] == '\0' &&
+ 					  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i+1] == '\0') &&
+ 					  (i+1)<MAX_BUF_INDEX){
+ 					terminals[cur_terminal].line_buffer[i]=' ';
+ 				    terminals[cur_terminal].line_buffer_index--;
+    				term_delete_char(cur_terminal);
+    				i++;
+    			}
+    			terminals[cur_terminal].line_buffer[i]=' ';
+    			terminals[cur_terminal].line_buffer_index++;
+    			term_delete_char(cur_terminal);
+
+ 				/* If no previous commands, display last available */
+ 				i=0;
+ 				while(!(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i] == ' ' && 
+ 					  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i+1] == ' ') &&
+ 					  !(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i] == '\0' &&
+ 					  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i+1] == '\0') &&
+ 					  (i+1)<MAX_BUF_INDEX){
+ 					terminals[cur_terminal].line_buffer[i]=terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i];
+ 				    terminals[cur_terminal].line_buffer_index++;
+ 					term_putc(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i], cur_terminal);
+ 					i++;
+ 				}
+
+ 				move_csr(terminals[cur_terminal].c_x,terminals[cur_terminal].c_y);
+
+ 				/* Increment terminal's cmdCount to point to previous command
+ 				 * If no previous commands, display last available */
+ 				if(terminals[cur_terminal].cmdCount<4)
+ 					terminals[cur_terminal].cmdCount++;
+ 		/* Command history -- next */
+ 		}else if(keyboard_scancode == DOWNCODE){
+ 				/* Clear next line */
+ 				int i;
+ 				/*
+    			for(i=(NUM_ROWS - 1)*NUM_COLS; i<NUM_ROWS*NUM_COLS; i++){
+        			*(uint8_t *)(terminals[cur_terminal].video_mem + (i << 1)) = ' ';
+        			*(uint8_t *)(terminals[cur_terminal].video_mem + (i << 1) + 1) = ATTRIB;
+    			}
+    			*/
+    			term_putc(' ', cur_terminal);
+    			/* Set terminal's cmdCount to delete line */
+    			if(terminals[cur_terminal].cmdCount==0)
+    				terminals[cur_terminal].cmdCount=1;
+    			i=0;
+ 				while(!(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i] == ' ' && 
+ 					  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i+1] == ' ') &&
+ 					  !(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i] == '\0' &&
+ 					  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount-1][i+1] == '\0') &&
+ 					  (i+1)<MAX_BUF_INDEX){
+ 					terminals[cur_terminal].line_buffer[i]=' ';
+ 				    terminals[cur_terminal].line_buffer_index--;
+    				term_delete_char(cur_terminal);
+    				i++;
+    			}
+    			terminals[cur_terminal].line_buffer[i]=' ';
+    			terminals[cur_terminal].line_buffer_index++;
+    			term_delete_char(cur_terminal);
+
+ 				/* Decrement terminal's cmdCount to point to next command */
+ 				terminals[cur_terminal].cmdCount--;
+ 				/* If no next commands, display most recent */
+ 				if(terminals[cur_terminal].cmdCount!=0 && terminals[cur_terminal].cmdCount<4){
+ 					i=0;
+ 					while(!(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i] == ' ' && 
+ 						  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i+1] == ' ') &&
+ 						  !(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i] == '\0' &&
+ 					 	  terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i+1] == '\0') &&
+ 					 	  (i+1)<MAX_BUF_INDEX){
+ 					terminals[cur_terminal].line_buffer[i]=terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i];
+ 				    terminals[cur_terminal].line_buffer_index++;
+ 					term_putc(terminals[cur_terminal].cmd_hist[terminals[cur_terminal].cmdCount][i], cur_terminal);
+ 					i++;
+ 					}
+ 				}
+ 				move_csr(terminals[cur_terminal].c_x,terminals[cur_terminal].c_y);
+
  		/* Resets the terminal by clearing screen, setting cursor
  		 * to original position, and clearing input line buffer */
  		}else if(ctrl && keyboard_chars[keyboard_scancode] == 'l'){
