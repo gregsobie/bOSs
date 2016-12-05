@@ -43,6 +43,7 @@ term_clear(uint8_t term)
     terminals[term].c_y=0;
     move_csr(terminals[term].c_x, terminals[term].c_y);
 }
+
 /* Removes a character from the console by replacing
  * with a space character and updating location */
 void delete_char(){
@@ -57,6 +58,22 @@ void delete_char(){
     if(terminals[current->terminal_id].c_x==NUM_COLS-1)
     	terminals[current->terminal_id].c_y--;
     move_csr(terminals[current->terminal_id].c_x, terminals[current->terminal_id].c_y);
+}
+
+/* Removes a character from the desired terminal by
+ * replacing with a space character and updating location */
+void term_delete_char(uint8_t term){
+	PCB_t * current;
+	cur_pcb(current);
+    *(uint8_t *)(terminals[term].video_mem + ((NUM_COLS*terminals[term].c_y + terminals[term].c_x -1) << 1)) = ' ';
+    *(uint8_t *)(terminals[term].video_mem + ((NUM_COLS*terminals[term].c_y + terminals[term].c_x -1) << 1) + 1) = ATTRIB;
+    terminals[term].c_x--;
+     /*Ensures valid index: 0 <= screen_x < NUM_COLS */
+    terminals[term].c_x %= NUM_COLS;
+    /* Decrement row if x index went negative */
+    if(terminals[term].c_x==NUM_COLS-1)
+    	terminals[term].c_y--;
+    move_csr(terminals[term].c_x, terminals[term].c_y);
 }
 
 /* Updates the hardware cursor: the little blinking line
@@ -328,7 +345,7 @@ term_putc(uint8_t c,uint8_t term)
     /* If current row falls off screen, adjust for visibility */
     if(terminals[term].c_y == NUM_ROWS){
         terminals[term].c_y--;
-        scroll();
+        term_scroll(term);
     }
 }
 /*

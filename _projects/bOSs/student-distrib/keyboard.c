@@ -169,7 +169,7 @@ void key_irq_handler(){
 		 * line input buffer to reflect element's absense */
  		}else if(keyboard_scancode == KEYBOARD_BACKSPACE){
  			if(terminals[cur_terminal].line_buffer_index > 0){
- 				delete_char();
+ 				term_delete_char(cur_terminal);
  				terminals[cur_terminal].line_buffer_index--;
  			}
  		/* Resets the terminal by clearing screen, setting cursor
