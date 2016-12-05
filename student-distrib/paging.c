@@ -7,32 +7,30 @@ initialize the 4 mb kernel page
 
 */
 void init_kernel_pd(){
-	int i,i2;
+	int i;
 	//iterate over all entries in the page directory
 	for(i = 0; i < DIRECTORY_SIZE; i++)
 	{
 		//set these bits as able to write to/present
 	    kernel_page_directory[i] = FLAG_WRITE_ENABLE;
 	}
-	for(i = 0; i < 3; i++){
 
-		for(i2 = 0; i2 < TABLE_SIZE; i2++)
-		{
-			//iterate over the size of the table
-			//set the vid mem page
-		    video_page_tables[i][i2] = FLAG_WRITE_ENABLE;
-		}
-		video_page_tables[i][VIDEO >> 12] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-
-		/* Set the next three entries in the video page table to support multiple terminal functionality */
-		video_page_tables[i][(VIDEO >> 12)+1] = (VIDEO + _4KB) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-		video_page_tables[i][(VIDEO >> 12)+2] = (VIDEO + _4KB*2) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-		video_page_tables[i][(VIDEO >> 12)+3] = (VIDEO + _4KB*3) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	for(i = 0; i < TABLE_SIZE; i++)
+	{
+		//iterate over the size of the table
+		//set the vid mem page
+	    video_page_table[i] = FLAG_WRITE_ENABLE;
 	}
-	video_page_tables[0][(VIDEO >> 12)+1] = FLAG_WRITE_ENABLE | FLAG_PRESENT | VIDEO;
+	video_page_table[VIDEO >> 12] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+
+	/* Set the next three entries in the video page table to support multiple terminal functionality */
+	video_page_table[(VIDEO >> 12)+1] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	video_page_table[(VIDEO >> 12)+2] = (VIDEO + _4KB*2) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	video_page_table[(VIDEO >> 12)+3] = (VIDEO + _4KB*3) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+
 
 	/* Alter all entries to point to their proper table / page */
-	kernel_page_directory[0] =  (uint32_t)video_page_tables[0] | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	kernel_page_directory[0] =  (uint32_t)video_page_table | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 	kernel_page_directory[1] = PAGE_4MB | FLAG_4MB_PAGE | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_GLOBAL;
 
 

@@ -110,7 +110,19 @@ void scroll(void)
         *(uint8_t *)(terminals[current->terminal_id].video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
-
+void term_scroll(uint8_t term){
+    int32_t i;
+    /* For each row, rewrite at 1 row above current location */
+    for(i=0; i<(NUM_ROWS - 1)*NUM_COLS; i++){
+        *(uint8_t *)(terminals[term].video_mem + (i << 1)) = *(uint8_t *)(terminals[term].video_mem + ((i + NUM_COLS) << 1));
+        *(uint8_t *)(terminals[term].video_mem + (i << 1) + 1) = ATTRIB;
+    }
+    /* Clear next line */
+    for(i=(NUM_ROWS - 1)*NUM_COLS; i<NUM_ROWS*NUM_COLS; i++){
+        *(uint8_t *)(terminals[term].video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(terminals[term].video_mem + (i << 1) + 1) = ATTRIB;
+    }
+}
 /* Standard printf().
  * Only supports the following format strings:
  * %%  - print a literal '%' character
