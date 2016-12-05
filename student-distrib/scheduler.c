@@ -41,7 +41,8 @@ void sched(){
 	video[((70+1+next)<<1) + 1] = 0x20;
 	loadPageDirectory(proc_page_directory[next]);
 	//printf("%d -> %d\n",pcb->pid,next);
-	tss.esp0 = next_pcb->esp0;
+	tss.ss0 = KERNEL_DS;
+	tss.esp0 = KERNEL_TOP-KB8 * next -4;
 	asm volatile("\
 		movl	%0,%%esp 	\n\
 		movl    %1,%%ebp"
