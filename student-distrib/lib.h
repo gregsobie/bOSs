@@ -19,6 +19,7 @@ void clear(void);
 void term_clear(uint8_t term);
 /* Deletes a typed character from appearing on the console */
 void delete_char(void);
+void term_delete_char(uint8_t term);
 
 /* Move the blinking cursor on the display */
 void move_csr(int cursor_x, int cursor_y);
