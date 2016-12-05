@@ -23,6 +23,7 @@ void init_kernel_pd(){
 	}
 	for(i=0;i<3;i++){
 		term_video_tables[i][0] = (VIDEO + _4KB*(i+1)) | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
+		video_page_table[(VIDEO >> 12)+i+1] = (VIDEO + _4KB*i+1) | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 
 	}
 	term_video_tables[0][0] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT | FLAG_USER;
@@ -30,9 +31,7 @@ void init_kernel_pd(){
 	video_page_table[VIDEO >> 12] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 
 	/* Set the next three entries in the video page table to support multiple terminal functionality */
-	video_page_table[(VIDEO >> 12)+1] = VIDEO | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-	video_page_table[(VIDEO >> 12)+2] = (VIDEO + _4KB*2) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
-	video_page_table[(VIDEO >> 12)+3] = (VIDEO + _4KB*3) | FLAG_USER | FLAG_WRITE_ENABLE | FLAG_PRESENT;
+	video_page_table[(VIDEO >> 12)+1] = VIDEO | FLAG_WRITE_ENABLE | FLAG_PRESENT;
 
 
 	/* Alter all entries to point to their proper table / page */
