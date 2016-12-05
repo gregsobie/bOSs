@@ -41,7 +41,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 		terminal_id = pid;
 	}
 	memset(pcb,0,sizeof(PCB_t));
-	pcb->pid = pid; //set member variables from current tss
+	pcb->pid = pid;
 	if(pcb->pid == 0)
 		pcb->parent = pcb; //if pid = 0 is the first process
 	//Parse args
@@ -71,7 +71,7 @@ asmlinkage int32_t execute (const uint8_t* command){
 	//Convert EIP from little endian to big endian
 	//Could use x86 bswap %reg
 	uint32_t eip = (head[27] << 24) | (head[26] << 16) | (head[25] << 8) | head[24];
-	//obtain perm level from flags register?
+
 
 	//Change paging
 	proc_page_directory[pid][0] =  (uint32_t)video_page_table | FLAG_WRITE_ENABLE | FLAG_PRESENT;

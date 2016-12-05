@@ -6,6 +6,9 @@
 #define _LIB_H
 
 #include "types.h"
+#define NUM_COLS 80
+#define NUM_ROWS 25
+#define ATTRIB 0x7
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
 void term_putc(uint8_t c,uint8_t term);
